@@ -382,8 +382,9 @@
   };
 
   var ruoliOptions = [
-    'mamma','papà','nonno','nonna','zio','zia',
-    'fratello','sorella','tutore','proprietario','altro'
+    'mamma','papà','marito','moglie','compagno','compagna',
+    'nonno','nonna','zio','zia','fratello','sorella',
+    'tutore','proprietario','altro'
   ];
 
   // Rendi funzioni globali
@@ -489,12 +490,13 @@
         '<div class="row">' +
           '<div class="field">' +
             '<label>Ruolo</label>' +
-            '<select id="ruolo' + i + '">' +
+            '<select id="ruolo' + i + '" onchange="toggleAltro(' + i + ')">' +
               ruoliOptions.map(function(r, idx) {
                 return '<option value="' + r + '"' + (idx === i-1 ? ' selected' : '') + '>' +
                   r.charAt(0).toUpperCase() + r.slice(1) + '</option>';
               }).join('') +
             '</select>' +
+            '<input id="ruolo-altro' + i + '" type="text" placeholder="Specifica il ruolo..." maxlength="30" style="display:none;margin-top:8px;"/>' +
           '</div>' +
           '<div class="field">' +
             '<label>Nome <span style="color:var(--red)">*</span></label>' +
@@ -508,6 +510,14 @@
       container.appendChild(div);
     }
   }
+
+  window.toggleAltro = function(i) {
+    var sel    = document.getElementById('ruolo' + i);
+    var altro  = document.getElementById('ruolo-altro' + i);
+    if (!sel || !altro) return;
+    altro.style.display = sel.value === 'altro' ? 'block' : 'none';
+    if (sel.value !== 'altro') altro.value = '';
+  };
 
   function normalizzaTel(t) {
     t = t.replace(/[\s\-]/g, '');
@@ -527,10 +537,14 @@
 
     var contatti = [];
     for (var i = 1; i <= numContatti; i++) {
-      var r = val('ruolo' + i);
-      var n = val('nome'  + i);
-      var t = normalizzaTel(val('tel' + i));
+      var rSel = val('ruolo' + i);
+      var r    = rSel === 'altro' ? (val('ruolo-altro' + i) || 'altro') : rSel;
+      var n    = val('nome'  + i);
+      var t    = normalizzaTel(val('tel' + i));
       if (!n || !t) { showAlert('Compila tutti i campi del contatto ' + i + '.', 'err'); return; }
+      if (rSel === 'altro' && !val('ruolo-altro' + i)) {
+        showAlert('Specifica il ruolo per il contatto ' + i + '.', 'err'); return;
+      }
       contatti.push({ ruolo: r, nome: n, tel: t, wa: t.replace(/^\+/, '') });
     }
 
