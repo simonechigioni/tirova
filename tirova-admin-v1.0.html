@@ -395,7 +395,7 @@
 
   var tuttiTag = [];
   var tagDaEliminare = null;
-  var BASE_URL = 'https://simonechigioni.github.io/tirova/tirova-sos-v1.0.html?id=';
+  var BASE_URL = 'https://simonechigioni.github.io/tirova/tirova-sos-v1.1.html#';
 
   var tipoIcon  = { bambino:'👶', animale:'🐾', caregiver:'🧓', oggetto:'🎒', sos:'🆘' };
   var tipoLabel = { bambino:'Bambino/a', animale:'Animale', caregiver:'Caregiver', oggetto:'Oggetto', sos:'SOS' };
@@ -514,6 +514,7 @@
         '</div>' +
         (t.identificativo ? '<div style="font-size:13px;color:var(--ink-soft);margin-bottom:6px;">' + t.identificativo + '</div>' : '') +
         '<div class="tag-row-contatti">' + (contStr || '<em style="color:var(--muted)">Nessun contatto</em>') + '</div>' +
+        '<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:10px;margin-bottom:4px;">📲 URL da programmare sul tag NFC</div>' +
         '<div class="tag-row-url">' + tagUrl + '</div>' +
         '<div class="tag-row-actions">' +
           '<button class="btn-action btn-test"   onclick="testTag(\''  + t.id + '\')">▶ Testa</button>' +
