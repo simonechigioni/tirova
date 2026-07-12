@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TiRoVA — Admin</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --red:      #D32F2F;
+      --red-dark: #B71C1C;
+      --ink:      #1A1A1A;
+      --ink-soft: #444444;
+      --muted:    #888888;
+      --bg:       #F7F7F7;
+      --white:    #FFFFFF;
+      --border:   #E8E8E8;
+      --radius:   16px;
+      --shadow:   0 2px 16px rgba(0,0,0,0.08);
+      --green:    #2E7D32;
+      --green-bg: #E8F5E9;
+      --amber:    #E65100;
+      --amber-bg: #FFF3E0;
+    }
+    body {
+      background: var(--bg); color: var(--ink);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100dvh; display: flex; flex-direction: column; align-items: center;
+    }
+
+    /* Header */
+    .header {
+      width: 100%; background: var(--ink);
+      display: flex; align-items: center;
+      justify-content: space-between; padding: 14px 20px;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .header img { height: 32px; object-fit: contain; filter: brightness(0) invert(1); }
+    .header-badge {
+      background: var(--red); color: #fff;
+      font-size: 11px; font-weight: 800; letter-spacing: .1em;
+      text-transform: uppercase; padding: 4px 10px; border-radius: 6px;
+    }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .btn-logout {
+      background: none; border: 1px solid #444;
+      color: #aaa; font-size: 12px; font-weight: 600;
+      padding: 6px 12px; border-radius: 8px; cursor: pointer;
+    }
+    .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+    .main { width: 100%; max-width: 700px; padding: 28px 16px 60px; }
+
+    /* Login admin */
+    #view-login {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 40px 0;
+    }
+    .login-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 32px 28px;
+      width: 100%; max-width: 400px; box-shadow: var(--shadow);
+    }
+    .login-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+    .login-desc  { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+    /* Pannello admin */
+    #view-admin { display: none; }
+
+    /* Stat bar */
+    .stat-bar { display: flex; gap: 10px; margin-bottom: 28px; flex-wrap: wrap; }
+    .stat-card {
+      flex: 1; min-width: 120px; background: var(--white);
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px; box-shadow: var(--shadow); text-align: center;
+    }
+    .stat-num   { font-size: 28px; font-weight: 800; color: var(--red); }
+    .stat-label { font-size: 11px; color: var(--muted); font-weight: 600;
+      text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
+
+    /* Toolbar */
+    .toolbar {
+      display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .search-input {
+      flex: 1; min-width: 180px; background: var(--white);
+      border: 1.5px solid var(--border); border-radius: 10px;
+      color: var(--ink); font-size: 14px; padding: 10px 14px;
+      outline: none; font-family: inherit;
+    }
+    .search-input:focus { border-color: var(--red); }
+    .filter-select {
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: 10px; color: var(--ink); font-size: 14px;
+      padding: 10px 14px; outline: none; font-family: inherit; cursor: pointer;
+    }
+    .filter-select:focus { border-color: var(--red); }
+    .btn-nuovo-tag {
+      display: flex; align-items: center; gap: 6px;
+      padding: 10px 16px; border-radius: 10px; border: none;
+      background: var(--red); color: #fff;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-nuovo-tag:hover { opacity: .9; }
+
+    /* Section title */
+    .section-title {
+      font-size: 11px; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--muted);
+      margin: 0 0 12px; display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+    .section-count { color: var(--red); font-weight: 800; }
+
+    /* Tag row */
+    .tag-row {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px 18px;
+      margin-bottom: 10px; box-shadow: var(--shadow);
+    }
+    .tag-row-top {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+    }
+    .tag-icon-sm {
+      font-size: 24px; width: 44px; height: 44px; border-radius: 10px;
+      background: var(--bg); display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0;
+    }
+    .tag-row-info { flex: 1; min-width: 0; }
+    .tag-row-nome { font-size: 16px; font-weight: 800; color: var(--ink); }
+    .tag-row-meta { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+    .badge {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; padding: 2px 8px; border-radius: 999px;
+    }
+    .badge-tipo    { background: #FFEBEE; color: var(--red); }
+    .badge-id      { background: var(--bg); color: var(--muted); font-family: monospace; }
+    .badge-user    { background: #E3F2FD; color: #1565C0; }
+    .badge-data    { background: var(--bg); color: var(--muted); }
+
+    .tag-row-contatti {
+      font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.6;
+    }
+    .tag-row-url {
+      font-size: 11px; color: var(--red); font-family: monospace;
+      margin-top: 6px; word-break: break-all;
+      background: var(--bg); padding: 6px 10px; border-radius: 8px;
+    }
+    .tag-row-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .btn-action {
+      padding: 7px 12px; border-radius: 8px; font-size: 12px;
+      font-weight: 700; cursor: pointer; border: none; transition: opacity .15s;
+    }
+    .btn-action:hover { opacity: .8; }
+    .btn-test   { background: var(--green-bg); color: var(--green); }
+    .btn-copy   { background: var(--bg); color: var(--ink-soft); border: 1px solid var(--border); }
+    .btn-delete { background: #FFEBEE; color: var(--red); }
+
+    /* Nuovo tag form */
+    .nuovo-tag-form {
+      background: var(--white); border: 1.5px solid var(--red);
+      border-radius: var(--radius); padding: 24px;
+      margin-bottom: 20px; box-shadow: var(--shadow);
+      display: none;
+    }
+    .nuovo-tag-form.show { display: block; }
+    .form-title { font-size: 16px; font-weight: 800; margin-bottom: 16px; color: var(--ink); }
+    .field { margin-bottom: 14px; }
+    label { display: block; font-size: 13px; font-weight: 600;
+      color: var(--ink-soft); margin-bottom: 6px; }
+    input, select {
+      width: 100%; background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: 10px; color: var(--ink); font-size: 14px;
+      padding: 11px 13px; outline: none; font-family: inherit;
+    }
+    input:focus, select:focus { border-color: var(--red); background: var(--white); }
+    .form-btns { display: flex; gap: 10px; margin-top: 16px; }
+    .btn-salva-tag {
+      flex: 2; padding: 13px; border-radius: 10px; border: none;
+      background: var(--red); color: #fff; font-size: 14px;
+      font-weight: 800; cursor: pointer;
+    }
+    .btn-annulla-form {
+      flex: 1; padding: 13px; border-radius: 10px;
+      border: 1.5px solid var(--border); background: var(--white);
+      font-size: 14px; font-weight: 700; cursor: pointer; color: var(--ink-soft);
+    }
+
+    /* Fields comuni */
+    .field-row { display: flex; gap: 10px; }
+    .field-row .field { flex: 1; }
+
+    /* Alert */
+    .alert { display: none; padding: 12px 16px; border-radius: 10px;
+      font-size: 13px; font-weight: 600; margin-bottom: 16px; }
+    .alert.ok  { background: var(--green-bg); border: 1px solid #A5D6A7; color: var(--green); display: block; }
+    .alert.err { background: #FFEBEE; border: 1px solid #FFCDD2; color: var(--red); display: block; }
+
+    /* Fields form */
+    .field-label { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+
+    /* Empty */
+    .empty-state {
+      text-align: center; padding: 48px 24px;
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .empty-icon  { font-size: 40px; margin-bottom: 12px; }
+    .empty-desc  { font-size: 13px; color: var(--muted); }
+
+    /* Loading */
+    .spinner { width: 36px; height: 36px; border: 3px solid var(--border);
+      border-top-color: var(--red); border-radius: 50%;
+      animation: spin .9s linear infinite; margin: 32px auto; display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.5); z-index: 100;
+      align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: var(--white); border-radius: var(--radius);
+      padding: 28px 24px; max-width: 360px; width: 100%;
+    }
+    .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .modal-desc  { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+    .modal-btns  { display: flex; gap: 10px; }
+    .btn-mc { flex:1; padding:13px; border-radius:10px; border:1.5px solid var(--border);
+      background:var(--white); font-size:14px; font-weight:700; cursor:pointer; color:var(--ink-soft); }
+    .btn-md { flex:1; padding:13px; border-radius:10px; border:none;
+      background:var(--red); color:#fff; font-size:14px; font-weight:800; cursor:pointer; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <img src="logo.png" alt="TiRoVA"/>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span class="header-badge">Admin</span>
+    <div class="header-right">
+      <button class="btn-logout" onclick="doLogout()">Esci</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- LOGIN ADMIN -->
+  <div id="view-login">
+    <div class="login-card">
+      <div class="login-title">Accesso Admin</div>
+      <div class="login-desc">Pannello riservato a TiRoVA. Inserisci le credenziali amministratore.</div>
+      <div class="alert" id="alert-login"></div>
+      <div class="field">
+        <label>Email admin</label>
+        <input id="admin-email" type="email" placeholder="admin@tirova.it"/>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>Password</label>
+        <input id="admin-pass" type="password" placeholder="••••••••"/>
+      </div>
+      <button class="btn-salva-tag" style="margin-top:20px;width:100%;" onclick="doLoginAdmin()">
+        Accedi al pannello
+      </button>
+    </div>
+  </div>
+
+  <!-- PANNELLO ADMIN -->
+  <div id="view-admin">
+
+    <div class="alert" id="alert-admin"></div>
+
+    <!-- Stat -->
+    <div class="stat-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-tag">—</div>
+        <div class="stat-label">Tag totali</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-utenti">—</div>
+        <div class="stat-label">Utenti</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-contatti">—</div>
+        <div class="stat-label">Contatti</div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <input class="search-input" id="search-input"
+        placeholder="🔍 Cerca per nome, ID tag, tipo..."
+        oninput="filtraTag()"/>
+      <select class="filter-select" id="filter-tipo" onchange="filtraTag()">
+        <option value="">Tutti i tipi</option>
+        <option value="bambino">👶 Bambino</option>
+        <option value="animale">🐾 Animale</option>
+        <option value="caregiver">🧓 Caregiver</option>
+        <option value="oggetto">🎒 Oggetto</option>
+        <option value="sos">🆘 SOS</option>
+      </select>
+      <button class="btn-nuovo-tag" onclick="toggleNuovoTag()">＋ Nuovo tag</button>
+    </div>
+
+    <!-- Form nuovo tag -->
+    <div class="nuovo-tag-form" id="form-nuovo-tag">
+      <div class="form-title">Crea nuovo tag</div>
+      <div class="field-row">
+        <div class="field">
+          <label>ID tag <span style="color:var(--red)">*</span></label>
+          <input id="new-tagid" type="text" placeholder="es. TAG001" maxlength="20"/>
+        </div>
+        <div class="field">
+          <label>Tipo <span style="color:var(--red)">*</span></label>
+          <select id="new-tipo">
+            <option value="bambino">👶 Bambino</option>
+            <option value="animale">🐾 Animale</option>
+            <option value="caregiver">🧓 Caregiver</option>
+            <option value="oggetto">🎒 Oggetto</option>
+            <option value="sos">🆘 SOS</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Nome <span style="color:var(--red)">*</span></label>
+          <input id="new-nome" type="text" placeholder="es. Cecilia"/>
+        </div>
+        <div class="field">
+          <label>WhatsApp auto (sec)</label>
+          <input id="new-autosec" type="number" value="5" min="0" max="30"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>Note / Descrizione</label>
+        <input id="new-desc" type="text" placeholder="es. Figlia di Simone, 5 anni"/>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">
+        Il tag verrà creato come <strong>non registrato</strong> — il cliente lo configurerà scansionando il tag NFC.
+      </div>
+      <div class="form-btns">
+        <button class="btn-annulla-form" onclick="toggleNuovoTag()">Annulla</button>
+        <button class="btn-salva-tag" onclick="creaNuovoTag()">✓ Crea tag</button>
+      </div>
+    </div>
+
+    <!-- Lista tag -->
+    <div class="section-title">
+      Tag configurati <span class="section-count" id="count-label"></span>
+    </div>
+    <div id="tag-list"><div class="spinner"></div></div>
+
+  </div>
+
+</div>
+
+<!-- Modal elimina -->
+<div class="modal-overlay" id="modal-elimina">
+  <div class="modal">
+    <div class="modal-title">Eliminare il tag?</div>
+    <div class="modal-desc">Stai eliminando il tag <strong id="modal-tag-id"></strong>. Questa azione è irreversibile.</div>
+    <div class="modal-btns">
+      <button class="btn-mc" onclick="chiudiModal()">Annulla</button>
+      <button class="btn-md" onclick="confermaElimina()">Elimina</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, query, orderBy }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDUe5uU7AETL5tjKU3PqwxIjrzYCvKnZnQ",
+    authDomain: "sosbambini-d5083.firebaseapp.com",
+    projectId: "sosbambini-d5083",
+    storageBucket: "sosbambini-d5083.firebasestorage.app",
+    messagingSenderId: "232619660802",
+    appId: "1:232619660802:web:9235c7cd4d20b9a831b91b"
+  };
+
+  // ⚠️ INSERISCI QUI LA TUA EMAIL ADMIN
+  const ADMIN_EMAIL = 'Simone.chigioni@gmail.com';
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  var tuttiTag = [];
+  var tagDaEliminare = null;
+  var BASE_URL = 'https://simonechigioni.github.io/tirova/tirova-sos-v1.0.html?id=';
+
+  var tipoIcon  = { bambino:'👶', animale:'🐾', caregiver:'🧓', oggetto:'🎒', sos:'🆘' };
+  var tipoLabel = { bambino:'Bambino/a', animale:'Animale', caregiver:'Caregiver', oggetto:'Oggetto', sos:'SOS' };
+
+  window.doLoginAdmin   = doLoginAdmin;
+  window.doLogout       = doLogout;
+  window.toggleNuovoTag = toggleNuovoTag;
+  window.creaNuovoTag   = creaNuovoTag;
+  window.filtraTag      = filtraTag;
+  window.testTag        = testTag;
+  window.copiaUrl       = copiaUrl;
+  window.eliminaTag     = eliminaTag;
+  window.chiudiModal    = chiudiModal;
+  window.confermaElimina = confermaElimina;
+
+  onAuthStateChanged(auth, function(user) {
+    if (user && user.email === ADMIN_EMAIL) {
+      document.getElementById('view-login').style.display = 'none';
+      document.getElementById('view-admin').style.display = 'block';
+      caricaTutti();
+    }
+  });
+
+  async function doLoginAdmin() {
+    var email = document.getElementById('admin-email').value.trim();
+    var pass  = document.getElementById('admin-pass').value.trim();
+    if (!email || !pass) { showAlertLogin('Compila email e password.'); return; }
+    if (email !== ADMIN_EMAIL) { showAlertLogin('Accesso non autorizzato.'); return; }
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch(e) {
+      var map = {
+        'auth/wrong-password':     'Password errata.',
+        'auth/invalid-credential': 'Credenziali non valide.',
+        'auth/user-not-found':     'Utente non trovato.'
+      };
+      showAlertLogin(map[e.code] || 'Errore: ' + e.code);
+    }
+  }
+
+  function showAlertLogin(msg) {
+    var el = document.getElementById('alert-login');
+    el.textContent = msg; el.className = 'alert err';
+  }
+
+  async function caricaTutti() {
+    var listEl = document.getElementById('tag-list');
+    try {
+      var snap = await getDocs(collection(db, 'tags'));
+      tuttiTag = [];
+      var totContatti = 0;
+      snap.forEach(function(d) {
+        var data = d.data();
+        tuttiTag.push({ id: d.id, ...data });
+        totContatti += (data.contatti || []).length;
+      });
+
+      // Carica utenti
+      var snapU = await getDocs(collection(db, 'users'));
+      var utenti = {};
+      snapU.forEach(function(d) { utenti[d.id] = d.data(); });
+
+      // Arricchisci con email utente
+      tuttiTag.forEach(function(t) {
+        if (t.proprietario && utenti[t.proprietario]) {
+          t._emailUtente = utenti[t.proprietario].email || '';
+          t._nomeUtente  = utenti[t.proprietario].nome  || '';
+        }
+      });
+
+      document.getElementById('stat-tag').textContent      = tuttiTag.length;
+      document.getElementById('stat-utenti').textContent   = snapU.size;
+      document.getElementById('stat-contatti').textContent = totContatti;
+
+      renderTag(tuttiTag);
+    } catch(e) {
+      listEl.innerHTML = '<div class="empty-state"><div class="empty-desc" style="color:var(--red)">Errore: ' + e.message + '</div></div>';
+    }
+  }
+
+  function renderTag(lista) {
+    var listEl = document.getElementById('tag-list');
+    var countEl = document.getElementById('count-label');
+    if (countEl) countEl.textContent = '(' + lista.length + ')';
+
+    if (lista.length === 0) {
+      listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">🏷️</div><div class="empty-desc">Nessun tag trovato.</div></div>';
+      return;
+    }
+
+    listEl.innerHTML = '';
+    lista.forEach(function(t) {
+      var icon  = tipoIcon[t.tipo]  || '🏷️';
+      var label = tipoLabel[t.tipo] || t.tipo || '—';
+      var contStr = (t.contatti || []).map(function(c) {
+        return c.ruolo + ' ' + c.nome + ' — ' + c.tel;
+      }).join('<br>');
+      var dataStr = t.dataRegistrazione
+        ? new Date(t.dataRegistrazione).toLocaleDateString('it-IT') : '—';
+      var tagUrl = BASE_URL + t.id;
+
+      var div = document.createElement('div');
+      div.className = 'tag-row';
+      div.innerHTML =
+        '<div class="tag-row-top">' +
+          '<div class="tag-icon-sm">' + icon + '</div>' +
+          '<div class="tag-row-info">' +
+            '<div class="tag-row-nome">' + (t.nome || 'Senza nome') + '</div>' +
+            '<div class="tag-row-meta">' +
+              '<span class="badge badge-tipo">' + label + '</span>' +
+              '<span class="badge badge-id">#' + t.id + '</span>' +
+              (t._emailUtente ? '<span class="badge badge-user">' + (t._nomeUtente || t._emailUtente) + '</span>' : '<span class="badge" style="background:#FFF3E0;color:#E65100;">Non registrato</span>') +
+              '<span class="badge badge-data">' + dataStr + '</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        (t.identificativo ? '<div style="font-size:13px;color:var(--ink-soft);margin-bottom:6px;">' + t.identificativo + '</div>' : '') +
+        '<div class="tag-row-contatti">' + (contStr || '<em style="color:var(--muted)">Nessun contatto</em>') + '</div>' +
+        '<div class="tag-row-url">' + tagUrl + '</div>' +
+        '<div class="tag-row-actions">' +
+          '<button class="btn-action btn-test"   onclick="testTag(\''  + t.id + '\')">▶ Testa</button>' +
+          '<button class="btn-action btn-copy"   onclick="copiaUrl(\'' + tagUrl + '\')">📋 Copia URL</button>' +
+          '<button class="btn-action btn-delete" onclick="eliminaTag(\'' + t.id + '\')">🗑 Elimina</button>' +
+        '</div>';
+      listEl.appendChild(div);
+    });
+  }
+
+  function filtraTag() {
+    var q    = (document.getElementById('search-input').value || '').toLowerCase();
+    var tipo = document.getElementById('filter-tipo').value;
+    var res  = tuttiTag.filter(function(t) {
+      var matchTipo = !tipo || t.tipo === tipo;
+      var matchQ    = !q ||
+        (t.nome  || '').toLowerCase().includes(q) ||
+        (t.id    || '').toLowerCase().includes(q) ||
+        (t.tipo  || '').toLowerCase().includes(q) ||
+        (t._emailUtente || '').toLowerCase().includes(q) ||
+        (t._nomeUtente  || '').toLowerCase().includes(q);
+      return matchTipo && matchQ;
+    });
+    renderTag(res);
+  }
+
+  function toggleNuovoTag() {
+    var form = document.getElementById('form-nuovo-tag');
+    form.classList.toggle('show');
+  }
+
+  async function creaNuovoTag() {
+    var id      = document.getElementById('new-tagid').value.trim().replace(/\s/g,'').toUpperCase();
+    var tipo    = document.getElementById('new-tipo').value;
+    var nome    = document.getElementById('new-nome').value.trim();
+    var autoSec = parseInt(document.getElementById('new-autosec').value) || 5;
+    var desc    = document.getElementById('new-desc').value.trim();
+
+    if (!id || !nome) { showAlertAdmin('Compila ID tag e nome.', 'err'); return; }
+
+    try {
+      await setDoc(doc(db, 'tags', id), {
+        tipo:             tipo,
+        nome:             nome,
+        identificativo:   desc,
+        autoSec:          autoSec,
+        contatti:         [],
+        registrato:       false,
+        dataCreazione:    new Date().toISOString()
+      });
+      showAlertAdmin('✓ Tag "' + id + '" creato. URL: ' + BASE_URL + id, 'ok');
+      toggleNuovoTag();
+      // Reset campi
+      ['new-tagid','new-nome','new-desc'].forEach(function(f) {
+        document.getElementById(f).value = '';
+      });
+      document.getElementById('new-autosec').value = '5';
+      caricaTutti();
+    } catch(e) {
+      showAlertAdmin('Errore: ' + e.message, 'err');
+    }
+  }
+
+  function testTag(id) { window.open(BASE_URL + id, '_blank'); }
+
+  function copiaUrl(url) {
+    navigator.clipboard.writeText(url).then(function() {
+      showAlertAdmin('URL copiato!', 'ok');
+    });
+  }
+
+  function eliminaTag(id) {
+    tagDaEliminare = id;
+    document.getElementById('modal-tag-id').textContent = id;
+    document.getElementById('modal-elimina').classList.add('show');
+  }
+
+  function chiudiModal() {
+    tagDaEliminare = null;
+    document.getElementById('modal-elimina').classList.remove('show');
+  }
+
+  async function confermaElimina() {
+    if (!tagDaEliminare) return;
+    try {
+      await deleteDoc(doc(db, 'tags', tagDaEliminare));
+      chiudiModal();
+      showAlertAdmin('Tag eliminato.', 'ok');
+      caricaTutti();
+    } catch(e) {
+      chiudiModal();
+      showAlertAdmin('Errore: ' + e.message, 'err');
+    }
+  }
+
+  function showAlertAdmin(msg, tipo) {
+    var el = document.getElementById('alert-admin');
+    el.textContent = msg; el.className = 'alert ' + tipo;
+    setTimeout(function() { el.className = 'alert'; }, 5000);
+  }
+
+  async function doLogout() {
+    await signOut(auth);
+    location.reload();
+  }
+</script>
+</body>
+</html>
