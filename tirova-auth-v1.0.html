@@ -304,7 +304,8 @@
 
   // Leggi tag ID dall'URL
   const params = new URLSearchParams(window.location.search);
-  const tagId  = params.get('id');
+  var tagId = window.location.hash.replace('#','').trim();
+  if (!tagId) { const p = new URLSearchParams(window.location.search); tagId = p.get('id'); }
 
   if (tagId) {
     var badge = document.getElementById('tag-badge');
@@ -317,7 +318,7 @@
   onAuthStateChanged(auth, function(user) {
     if (user) {
       if (tagId) {
-        window.location.href = 'tirova-configura-v1.0.html?id=' + tagId;
+        window.location.href = 'tirova-configura-v1.0.html#' + tagId;
       } else {
         window.location.href = 'tirova-dashboard-v1.0.html';
       }

@@ -352,7 +352,8 @@
   const db   = getFirestore(app);
 
   const params = new URLSearchParams(window.location.search);
-  const tagId  = params.get('id');
+  var tagId = window.location.hash.replace('#','').trim();
+  if (!tagId) { const p = new URLSearchParams(window.location.search); tagId = p.get('id'); }
   var currentUser = null;
 
   // Controlla autenticazione
@@ -561,7 +562,7 @@
       if (sv) sv.style.display = 'flex';
       var urlBox = document.getElementById('success-url');
       if (urlBox) urlBox.textContent =
-        'https://simonechigioni.github.io/tirova/tirova-sos-v1.0.html?id=' + tagId;
+        'https://simonechigioni.github.io/tirova/tirova-sos-v1.1.html#' + tagId;
 
     } catch(e) {
       showAlert('Errore nel salvataggio: ' + e.message, 'err');
