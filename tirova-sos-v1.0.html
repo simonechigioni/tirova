@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TiRoVA</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red:      #D32F2F;
+      --red-dark: #B71C1C;
+      --red-soft: #FFEBEE;
+      --ink:      #1A1A1A;
+      --ink-soft: #444444;
+      --muted:    #888888;
+      --bg:       #F7F7F7;
+      --white:    #FFFFFF;
+      --card:     #FFFFFF;
+      --border:   #E8E8E8;
+      --green:    #2E7D32;
+      --green-bg: #E8F5E9;
+      --amber:    #F57C00;
+      --amber-bg: #FFF3E0;
+      --radius:   16px;
+      --shadow:   0 2px 16px rgba(0,0,0,0.08);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── Header ── */
+    .header {
+      width: 100%;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 20px;
+    }
+    .header img {
+      height: 36px;
+      object-fit: contain;
+    }
+
+    .main {
+      width: 100%;
+      max-width: 480px;
+      padding: 28px 16px 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    /* ── Loading ── */
+    #view-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 60px 0;
+    }
+    .spinner {
+      width: 44px; height: 44px;
+      border: 3px solid var(--border);
+      border-top-color: var(--red);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: var(--muted); font-size: 14px; }
+
+    /* ── Error ── */
+    #view-error {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+      padding: 48px 24px;
+    }
+    .error-icon { font-size: 48px; }
+    .error-title { font-size: 20px; font-weight: 700; color: var(--ink); }
+    .error-desc  { font-size: 14px; color: var(--muted); line-height: 1.6; max-width: 300px; }
+
+    /* ── Pagina SOS ── */
+    #view-sos { display: none; width: 100%; flex-direction: column; align-items: center; gap: 0; }
+
+    /* Tipo badge */
+    .tipo-banner {
+      width: 100%;
+      border-radius: var(--radius);
+      padding: 20px 20px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .tipo-banner.urgente  { background: #FFEBEE; border: 1.5px solid #FFCDD2; }
+    .tipo-banner.normale  { background: #E3F2FD; border: 1.5px solid #BBDEFB; }
+    .tipo-icon { font-size: 40px; line-height: 1; }
+    .tipo-info {}
+    .tipo-label { font-size: 11px; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .tipo-nome  { font-size: 22px; font-weight: 800; color: var(--ink); line-height: 1.1; }
+    .tipo-desc  { font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
+
+    /* Card GPS */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      width: 100%;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .status-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--amber); flex-shrink: 0;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    .dot.ok  { background: var(--green); animation: none; }
+    .dot.err { background: var(--red);   animation: none; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .status-label { font-size: 14px; font-weight: 600; color: var(--ink); }
+    .coords {
+      font-family: 'Courier New', monospace; font-size: 11px;
+      color: var(--muted); background: var(--bg); padding: 7px 10px;
+      border-radius: 8px; margin-top: 6px; display: none;
+    }
+
+    /* Countdown */
+    .countdown-wrap { margin-top: 12px; display: none; }
+    .countdown-bar  { background: var(--border); border-radius: 4px; height: 4px; overflow: hidden; }
+    .countdown-fill { height: 100%; background: #25D366; width: 100%; transition: width 1s linear; }
+    .countdown-text { font-size: 12px; color: var(--muted); margin-top: 6px;
+      display: flex; align-items: center; justify-content: space-between; }
+    .countdown-text span { color: #25D366; font-weight: 700; }
+    .btn-annulla { background: none; border: none; color: var(--muted); font-size: 12px;
+      cursor: pointer; text-decoration: underline; padding: 0; }
+    .btn-annulla:hover { color: var(--red); }
+
+    /* Gruppo contatti */
+    .group-label {
+      font-size: 11px; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--muted);
+      width: 100%; margin: 16px 0 8px;
+    }
+
+    /* Pulsanti azione */
+    .btn {
+      display: flex; align-items: center; gap: 12px;
+      width: 100%; padding: 16px 18px; border-radius: 14px;
+      border: none; font-size: 15px; font-weight: 700;
+      cursor: pointer; text-decoration: none; margin-bottom: 10px;
+      transition: opacity .15s, transform .1s; color: var(--white);
+    }
+    .btn:last-child { margin-bottom: 0; }
+    .btn:active { opacity: .85; transform: scale(.98); }
+    .btn[disabled] { opacity: .3; pointer-events: none; }
+    .btn-icon { font-size: 20px; flex-shrink: 0; }
+    .btn-text { display: flex; flex-direction: column; text-align: left; }
+    .btn-label { font-size: 15px; font-weight: 700; line-height: 1.2; }
+    .btn-sub   { font-size: 11px; font-weight: 400; opacity: .85; margin-top: 1px; }
+
+    .btn-call  { background: var(--red); }
+    .btn-call:hover { background: var(--red-dark); }
+    .btn-wa    { background: #25D366; }
+    .btn-sms   { background: var(--ink); }
+    .btn-maps  { background: #1A73E8; }
+
+    /* Nota privacy */
+    .privacy-note {
+      font-size: 11px; color: var(--muted); text-align: center;
+      max-width: 320px; margin-top: 24px; line-height: 1.6;
+    }
+    .privacy-note strong { color: var(--ink-soft); }
+
+    /* Footer */
+    .footer {
+      margin-top: 32px; text-align: center;
+    }
+    .footer img { height: 24px; opacity: .4; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <img src="logo.png" alt="TiRoVA"/>
+  </div>
+
+  <div class="main">
+
+    <!-- LOADING -->
+    <div id="view-loading">
+      <div class="spinner"></div>
+      <p class="loading-text">Recupero informazioni...</p>
+    </div>
+
+    <!-- ERRORE -->
+    <div id="view-error">
+      <div class="error-icon">&#128533;</div>
+      <div class="error-title">Tag non riconosciuto</div>
+      <div class="error-desc">Questo tag non è ancora configurato nel sistema TiRoVA. Se sei il proprietario, scansiona di nuovo il tag per registrarlo.</div>
+    </div>
+
+    <!-- PAGINA SOS (popolata da JS) -->
+    <div id="view-sos"></div>
+
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDUe5uU7AETL5tjKU3PqwxIjrzYCvKnZnQ",
+    authDomain: "sosbambini-d5083.firebaseapp.com",
+    projectId: "sosbambini-d5083",
+    storageBucket: "sosbambini-d5083.firebasestorage.app",
+    messagingSenderId: "232619660802",
+    appId: "1:232619660802:web:9235c7cd4d20b9a831b91b"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  const params = new URLSearchParams(window.location.search);
+  const tagId  = params.get('id');
+
+  if (!tagId) {
+    showError();
+  } else {
+    caricaTag(tagId);
+  }
+
+  async function caricaTag(id) {
+    try {
+      const snap = await getDoc(doc(db, 'tags', id));
+      if (!snap.exists() || !snap.data().registrato) {
+        // Tag non registrato → vai alla pagina di configurazione
+        window.location.href = 'tirova-auth.html?id=' + id;
+        return;
+      }
+      show('view-loading', false);
+      renderSOS(snap.data());
+    } catch(e) {
+      showError();
+    }
+  }
+
+  function show(id, visible) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = visible ? 'flex' : 'none';
+  }
+
+  function showError() {
+    show('view-loading', false);
+    show('view-error', true);
+  }
+
+  function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+  // Configurazione per tipo
+  var tipoConfig = {
+    bambino:   { icon: '👶', label: 'Bambino/a',      urgente: true,  msg: 'Ho trovato un bambino che ha bisogno di aiuto.' },
+    animale:   { icon: '🐾', label: 'Animale',         urgente: false, msg: 'Ho trovato un animale con questo tag.' },
+    caregiver: { icon: '🧓', label: 'Persona assistita', urgente: true,  msg: 'Ho trovato una persona che potrebbe aver bisogno di aiuto.' },
+    oggetto:   { icon: '🎒', label: 'Oggetto',         urgente: false, msg: 'Ho trovato un oggetto con questo tag.' },
+    sos:       { icon: '🆘', label: 'Contatto SOS',    urgente: true,  msg: 'Questo tag è collegato a un contatto di emergenza.' }
+  };
+
+  var callColors = ['#D32F2F','#B71C1C','#7B1515'];
+  var waColors   = ['#25D366','#1DA851','#157A3C'];
+
+  function renderSOS(data) {
+    var tipo     = data.tipo || 'sos';
+    var cfg      = tipoConfig[tipo] || tipoConfig.sos;
+    var bambino  = data.nome || 'il soggetto';
+    var idDesc   = data.identificativo || '';
+    var contatti = data.contatti || [];
+    var autoSec  = data.autoSec || 0;
+    var view     = document.getElementById('view-sos');
+
+    var html =
+      '<div class="tipo-banner ' + (cfg.urgente ? 'urgente' : 'normale') + '">' +
+        '<div class="tipo-icon">' + cfg.icon + '</div>' +
+        '<div class="tipo-info">' +
+          '<div class="tipo-label">' + cfg.label + '</div>' +
+          '<div class="tipo-nome">' + bambino + '</div>' +
+          (idDesc ? '<div class="tipo-desc">' + idDesc + '</div>' : '') +
+        '</div>' +
+      '</div>' +
+
+      '<div class="card">' +
+        '<div class="status-row">' +
+          '<div class="dot" id="dot"></div>' +
+          '<span class="status-label" id="status-label">Ricerca posizione GPS&hellip;</span>' +
+        '</div>' +
+        '<div class="coords" id="coords"></div>' +
+        '<div class="countdown-wrap" id="cd-wrap">' +
+          '<div class="countdown-bar"><div class="countdown-fill" id="cd-fill"></div></div>' +
+          '<div class="countdown-text">' +
+            '<span>WhatsApp si apre tra <span id="cd-num">' + autoSec + '</span>s</span>' +
+            '<button class="btn-annulla" onclick="cancelAuto()">Annulla</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    // Pulsanti contatti
+    contatti.forEach(function(c, i) {
+      var idx = i + 1;
+      html +=
+        '<div class="group-label">' + cap(c.ruolo) + ' ' + c.nome + '</div>' +
+
+        '<a class="btn btn-call" id="btn-call' + idx + '" href="tel:' + c.tel + '">' +
+          '<span class="btn-icon">📞</span>' +
+          '<span class="btn-text"><span class="btn-label">Chiama ' + c.ruolo + ' ' + c.nome + '</span></span>' +
+        '</a>' +
+
+        '<a class="btn btn-wa" id="btn-wa' + idx + '" href="#" disabled>' +
+          '<span class="btn-icon">💬</span>' +
+          '<span class="btn-text">' +
+            '<span class="btn-label">WhatsApp ' + c.ruolo + ' ' + c.nome + '</span>' +
+            '<span class="btn-sub">Invia posizione</span>' +
+          '</span>' +
+        '</a>' +
+
+        '<a class="btn btn-sms" id="btn-sms' + idx + '" href="#" disabled>' +
+          '<span class="btn-icon">✉️</span>' +
+          '<span class="btn-text">' +
+            '<span class="btn-label">SMS ' + c.ruolo + ' ' + c.nome + '</span>' +
+            '<span class="btn-sub">Invia posizione</span>' +
+          '</span>' +
+        '</a>';
+    });
+
+    html +=
+      '<div class="group-label">Posizione</div>' +
+      '<a class="btn btn-maps" id="btn-maps" href="#" target="_blank" disabled>' +
+        '<span class="btn-icon">📍</span>' +
+        '<span class="btn-text"><span class="btn-label">Apri su Google Maps</span></span>' +
+      '</a>' +
+
+      '<p class="privacy-note">' +
+        'La posizione GPS viene condivisa solo con i contatti indicati.<br>' +
+        '<strong>TiRoVA</strong> non salva né conserva alcun dato di posizione.' +
+      '</p>' +
+
+      '<div class="footer"><img src="logo.png" alt="TiRoVA"/></div>';
+
+    view.innerHTML = html;
+    show('view-sos', true);
+    view.style.flexDirection = 'column';
+    view.style.alignItems = 'center';
+    view.style.width = '100%';
+
+    // ── Logica GPS + countdown ──
+    var autoTimer = null, cancelled = false;
+    var AUTO_SECONDI = autoSec;
+    var NOME = bambino;
+    var MSG_TIPO = cfg.msg;
+
+    window.cancelAuto = function() {
+      cancelled = true; clearInterval(autoTimer);
+      var w = document.getElementById('cd-wrap');
+      if (w) w.style.display = 'none';
+    };
+
+    function startCountdown(waUrl) {
+      if (AUTO_SECONDI <= 0 || cancelled) return;
+      var sec = AUTO_SECONDI;
+      var cdNum  = document.getElementById('cd-num');
+      var cdWrap = document.getElementById('cd-wrap');
+      var cdFill = document.getElementById('cd-fill');
+      if (cdNum)  cdNum.textContent = sec;
+      if (cdWrap) cdWrap.style.display = 'block';
+      setTimeout(function() {
+        if (cdFill) { cdFill.style.width = '0%'; cdFill.style.transition = 'width ' + AUTO_SECONDI + 's linear'; }
+      }, 50);
+      autoTimer = setInterval(function() {
+        sec--;
+        if (cdNum) cdNum.textContent = sec;
+        if (sec <= 0) {
+          clearInterval(autoTimer);
+          if (!cancelled) {
+            if (cdWrap) cdWrap.style.display = 'none';
+            setTimeout(function() { location.href = waUrl; }, 400);
+          }
+        }
+      }, 1000);
+    }
+
+    function buildMsg(extra) {
+      return encodeURIComponent(MSG_TIPO + ' ' + NOME + '. ' + extra);
+    }
+
+    function enableButtons(msgBody) {
+      contatti.forEach(function(c, i) {
+        var idx = i + 1;
+        var bw = document.getElementById('btn-wa'  + idx);
+        var bs = document.getElementById('btn-sms' + idx);
+        if (bw) { bw.href = 'https://wa.me/' + c.wa + '?text=' + msgBody; bw.removeAttribute('disabled'); }
+        if (bs) { bs.href = 'sms:' + c.tel + '?body=' + msgBody; bs.removeAttribute('disabled'); }
+      });
+    }
+
+    function setGpsError(msg) {
+      var dot = document.getElementById('dot');
+      var lbl = document.getElementById('status-label');
+      if (dot) dot.className = 'dot err';
+      if (lbl) lbl.textContent = msg;
+      var body = buildMsg('Non riesco a ottenere la posizione GPS. Chiama subito!');
+      enableButtons(body);
+      if (contatti[0]) startCountdown('https://wa.me/' + contatti[0].wa + '?text=' + body);
+    }
+
+    function setGpsOk(lat, lon) {
+      var dot    = document.getElementById('dot');
+      var lbl    = document.getElementById('status-label');
+      var coords = document.getElementById('coords');
+      var maps   = document.getElementById('btn-maps');
+      if (dot)    dot.className = 'dot ok';
+      if (lbl)    lbl.textContent = 'Posizione trovata';
+      if (coords) { coords.style.display = 'block'; coords.textContent = lat.toFixed(6) + ', ' + lon.toFixed(6); }
+      var mapsUrl = 'https://maps.google.com/?q=' + lat + ',' + lon;
+      if (maps) { maps.href = mapsUrl; maps.removeAttribute('disabled'); }
+      var body = buildMsg('\u00c8 qui: ' + mapsUrl);
+      enableButtons(body);
+      if (contatti[0]) startCountdown('https://wa.me/' + contatti[0].wa + '?text=' + body);
+    }
+
+    if (!navigator.geolocation) {
+      setGpsError('GPS non disponibile su questo dispositivo');
+    } else {
+      navigator.geolocation.getCurrentPosition(
+        function(pos) { setGpsOk(pos.coords.latitude, pos.coords.longitude); },
+        function(err) {
+          var msgs = {
+            1: 'Permesso GPS negato \u2014 usa i pulsanti',
+            2: 'Posizione non disponibile',
+            3: 'Timeout GPS \u2014 usa i pulsanti'
+          };
+          setGpsError(msgs[err.code] || 'Errore GPS');
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+      );
+    }
+  }
+</script>
+</body>
+</html>

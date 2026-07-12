@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TiRoVA — Configura tag</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --red:      #D32F2F;
+      --red-dark: #B71C1C;
+      --ink:      #1A1A1A;
+      --ink-soft: #444444;
+      --muted:    #888888;
+      --bg:       #F7F7F7;
+      --white:    #FFFFFF;
+      --border:   #E8E8E8;
+      --radius:   16px;
+      --shadow:   0 2px 16px rgba(0,0,0,0.08);
+      --green:    #2E7D32;
+    }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100dvh;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header {
+      width: 100%; background: var(--white);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+    }
+    .header img { height: 36px; object-fit: contain; }
+    .header-user { font-size: 13px; color: var(--muted); }
+    .btn-logout {
+      background: none; border: 1px solid var(--border);
+      color: var(--muted); font-size: 12px; font-weight: 600;
+      padding: 6px 12px; border-radius: 8px; cursor: pointer;
+    }
+    .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+    .main {
+      width: 100%; max-width: 520px;
+      padding: 32px 16px 60px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+
+    /* Progress steps */
+    .steps {
+      display: flex; align-items: center;
+      width: 100%; margin-bottom: 32px; gap: 0;
+    }
+    .step {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 6px; flex: 1;
+    }
+    .step-circle {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 2px solid var(--border); background: var(--white);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; color: var(--muted);
+      transition: all .3s;
+    }
+    .step.active .step-circle  { border-color: var(--red); background: var(--red); color: #fff; }
+    .step.done  .step-circle   { border-color: var(--green); background: var(--green); color: #fff; }
+    .step-label { font-size: 10px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .08em; text-align: center; }
+    .step.active .step-label { color: var(--red); }
+    .step.done   .step-label { color: var(--green); }
+    .step-line { flex: 1; height: 2px; background: var(--border); margin-bottom: 20px; transition: background .3s; }
+    .step-line.done { background: var(--green); }
+
+    /* Card */
+    .card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px 24px;
+      width: 100%; box-shadow: var(--shadow); margin-bottom: 16px;
+    }
+    .card-title { font-size: 20px; font-weight: 800; color: var(--ink); margin-bottom: 6px; }
+    .card-desc  { font-size: 13px; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+
+    /* Tipo selector */
+    .tipo-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 10px; margin-bottom: 8px;
+    }
+    .tipo-btn {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 8px; padding: 18px 10px;
+      border: 2px solid var(--border); border-radius: 14px;
+      background: var(--white); cursor: pointer;
+      transition: all .2s; text-align: center;
+    }
+    .tipo-btn:hover { border-color: #FFCDD2; background: #FFF8F8; }
+    .tipo-btn.selected { border-color: var(--red); background: #FFF8F8; }
+    .tipo-icon  { font-size: 32px; line-height: 1; }
+    .tipo-nome  { font-size: 13px; font-weight: 700; color: var(--ink); }
+    .tipo-desc-small { font-size: 11px; color: var(--muted); line-height: 1.3; }
+
+    /* Form fields */
+    .field { margin-bottom: 16px; }
+    .field:last-of-type { margin-bottom: 0; }
+    label { display: block; font-size: 13px; font-weight: 600;
+      color: var(--ink-soft); margin-bottom: 7px; }
+    label span { color: var(--red); }
+    input, select, textarea {
+      width: 100%; background: var(--bg);
+      border: 1.5px solid var(--border); border-radius: 10px;
+      color: var(--ink); font-size: 15px; padding: 13px 14px;
+      outline: none; transition: border-color .2s; font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--red); background: var(--white);
+    }
+    input::placeholder, textarea::placeholder { color: #bbb; }
+    select option { background: var(--white); }
+    textarea { resize: vertical; min-height: 80px; }
+    .row { display: flex; gap: 12px; }
+    .row .field { flex: 1; }
+
+    /* Num contatti */
+    .num-selector { display: flex; gap: 8px; margin-bottom: 16px; }
+    .num-btn {
+      flex: 1; padding: 12px 8px; border-radius: 10px;
+      border: 2px solid var(--border); background: var(--white);
+      color: var(--muted); font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: all .2s; text-align: center;
+    }
+    .num-btn.active { border-color: var(--red); background: #FFF8F8; color: var(--red); }
+
+    /* Contatto card */
+    .contatto-card {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px; margin-bottom: 12px;
+    }
+    .contatto-card:last-child { margin-bottom: 0; }
+    .contatto-header {
+      font-size: 12px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .1em; margin-bottom: 14px;
+    }
+
+    /* Bottoni navigazione */
+    .nav-btns { display: flex; gap: 10px; width: 100%; margin-top: 8px; }
+    .btn-back {
+      flex: 1; padding: 16px; border-radius: 12px;
+      border: 1.5px solid var(--border); background: var(--white);
+      color: var(--ink-soft); font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-back:hover { border-color: var(--ink); }
+    .btn-next {
+      flex: 2; display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 16px; border-radius: 12px; border: none;
+      background: var(--red); color: var(--white);
+      font-size: 15px; font-weight: 800; cursor: pointer;
+      transition: opacity .15s, transform .1s;
+    }
+    .btn-next:hover { opacity: .9; }
+    .btn-next:active { transform: scale(.98); }
+    .btn-next:disabled { opacity: .4; pointer-events: none; }
+
+    /* Alert */
+    .alert {
+      display: none; padding: 12px 16px; border-radius: 10px;
+      font-size: 13px; font-weight: 600; margin-bottom: 16px; line-height: 1.4;
+    }
+    .alert.ok  { background: #E8F5E9; border: 1px solid #A5D6A7; color: var(--green); display: block; }
+    .alert.err { background: #FFEBEE; border: 1px solid #FFCDD2; color: var(--red); display: block; }
+
+    /* Spinner */
+    .spinner-sm {
+      width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.4);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin .8s linear infinite; display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Successo */
+    #view-success {
+      display: none; flex-direction: column; align-items: center;
+      text-align: center; gap: 16px; padding: 20px 0;
+    }
+    .success-icon { font-size: 64px; }
+    .success-title { font-size: 24px; font-weight: 800; color: var(--ink); }
+    .success-desc  { font-size: 14px; color: var(--muted); line-height: 1.6; max-width: 320px; }
+    .url-box {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 16px;
+      font-family: monospace; font-size: 13px; color: var(--red);
+      word-break: break-all; width: 100%; text-align: left;
+    }
+    .btn-dashboard {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 16px; border-radius: 12px; border: none;
+      background: var(--red); color: var(--white);
+      font-size: 15px; font-weight: 800; cursor: pointer; text-decoration: none;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <img src="logo.png" alt="TiRoVA"/>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span class="header-user" id="header-email"></span>
+    <button class="btn-logout" onclick="doLogout()">Esci</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- PROGRESS -->
+  <div class="steps" id="steps-bar">
+    <div class="step active" id="step1">
+      <div class="step-circle">1</div>
+      <div class="step-label">Tipo</div>
+    </div>
+    <div class="step-line" id="line1"></div>
+    <div class="step" id="step2">
+      <div class="step-circle">2</div>
+      <div class="step-label">Dettagli</div>
+    </div>
+    <div class="step-line" id="line2"></div>
+    <div class="step" id="step3">
+      <div class="step-circle">3</div>
+      <div class="step-label">Contatti</div>
+    </div>
+  </div>
+
+  <div class="alert" id="alert-main"></div>
+
+  <!-- STEP 1 — Tipo -->
+  <div class="card" id="panel-step1">
+    <div class="card-title">Che cosa vuoi proteggere?</div>
+    <div class="card-desc">Scegli il tipo di tag. La pagina SOS verrà personalizzata in base alla tua scelta.</div>
+    <div class="tipo-grid">
+      <div class="tipo-btn" id="tipo-bambino" onclick="selezionaTipo('bambino')">
+        <div class="tipo-icon">👶</div>
+        <div class="tipo-nome">Bambino/a</div>
+        <div class="tipo-desc-small">Per bambini che potrebbero perdersi</div>
+      </div>
+      <div class="tipo-btn" id="tipo-animale" onclick="selezionaTipo('animale')">
+        <div class="tipo-icon">🐾</div>
+        <div class="tipo-nome">Animale</div>
+        <div class="tipo-desc-small">Per cani, gatti e altri animali</div>
+      </div>
+      <div class="tipo-btn" id="tipo-caregiver" onclick="selezionaTipo('caregiver')">
+        <div class="tipo-icon">🧓</div>
+        <div class="tipo-nome">Persona assistita</div>
+        <div class="tipo-desc-small">Per anziani o persone con disabilità</div>
+      </div>
+      <div class="tipo-btn" id="tipo-oggetto" onclick="selezionaTipo('oggetto')">
+        <div class="tipo-icon">🎒</div>
+        <div class="tipo-nome">Oggetto</div>
+        <div class="tipo-desc-small">Zaini, chiavi, valigie e altro</div>
+      </div>
+      <div class="tipo-btn" id="tipo-sos" onclick="selezionaTipo('sos')" style="grid-column:span 2;">
+        <div class="tipo-icon">🆘</div>
+        <div class="tipo-nome">Contatto SOS generico</div>
+        <div class="tipo-desc-small">Pagina di emergenza con i tuoi contatti</div>
+      </div>
+    </div>
+    <div class="nav-btns" style="margin-top:20px;">
+      <button class="btn-next" id="btn-next1" onclick="vaiStep(2)" disabled>Avanti →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2 — Dettagli -->
+  <div class="card hidden" id="panel-step2">
+    <div class="card-title" id="step2-title">Dettagli</div>
+    <div class="card-desc"  id="step2-desc">Inserisci le informazioni che appariranno sulla pagina SOS.</div>
+
+    <div class="field">
+      <label id="label-nome">Nome <span>*</span></label>
+      <input id="inp-nome" type="text" placeholder="es. Cecilia" maxlength="50"/>
+    </div>
+    <div class="field">
+      <label>Descrizione <span style="color:var(--muted);font-weight:400;">(opzionale)</span></label>
+      <textarea id="inp-desc" placeholder="es. Figlia di Simone e Isabella, 5 anni, capelli castani"></textarea>
+    </div>
+    <div class="field">
+      <label>Secondi prima di aprire WhatsApp automaticamente <span style="color:var(--muted);font-weight:400;">(0 = mai)</span></label>
+      <input id="inp-autosec" type="number" value="5" min="0" max="30"/>
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn-back" onclick="vaiStep(1)">← Indietro</button>
+      <button class="btn-next" onclick="vaiStep(3)">Avanti →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 — Contatti -->
+  <div class="card hidden" id="panel-step3">
+    <div class="card-title">Chi contattare?</div>
+    <div class="card-desc">Aggiungi le persone da contattare in caso di emergenza.</div>
+
+    <label style="margin-bottom:10px;">Numero di contatti <span style="color:var(--red);">*</span></label>
+    <div class="num-selector">
+      <div class="num-btn active" onclick="setNumContatti(1)">1</div>
+      <div class="num-btn"        onclick="setNumContatti(2)">2</div>
+      <div class="num-btn"        onclick="setNumContatti(3)">3</div>
+    </div>
+
+    <div id="contatti-container"></div>
+
+    <div class="nav-btns" style="margin-top:20px;">
+      <button class="btn-back" onclick="vaiStep(2)">← Indietro</button>
+      <button class="btn-next" id="btn-salva" onclick="salvaTag()">
+        <span class="spinner-sm" id="spin-salva"></span>
+        <span id="lbl-salva">✓ Salva e attiva</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SUCCESSO -->
+  <div id="view-success">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">Tag attivato!</div>
+    <div class="success-desc">Il tuo tag TiRoVA è pronto. Scansionalo per testarlo oppure vai alla dashboard per gestirlo.</div>
+    <div style="width:100%;text-align:left;margin-top:8px;">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;">URL DEL TAG</div>
+      <div class="url-box" id="success-url"></div>
+    </div>
+    <a class="btn-dashboard" href="tirova-dashboard-v1.0.html">Vai alla dashboard →</a>
+  </div>
+
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDUe5uU7AETL5tjKU3PqwxIjrzYCvKnZnQ",
+    authDomain: "sosbambini-d5083.firebaseapp.com",
+    projectId: "sosbambini-d5083",
+    storageBucket: "sosbambini-d5083.firebasestorage.app",
+    messagingSenderId: "232619660802",
+    appId: "1:232619660802:web:9235c7cd4d20b9a831b91b"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  const params = new URLSearchParams(window.location.search);
+  const tagId  = params.get('id');
+  var currentUser = null;
+
+  // Controlla autenticazione
+  onAuthStateChanged(auth, function(user) {
+    if (!user) {
+      window.location.href = 'tirova-auth-v1.0.html' + (tagId ? '?id=' + tagId : '');
+      return;
+    }
+    currentUser = user;
+    var emailEl = document.getElementById('header-email');
+    if (emailEl) emailEl.textContent = user.email;
+  });
+
+  // Stato
+  var tipoSelezionato = null;
+  var numContatti = 1;
+  var stepCorrente = 1;
+
+  // Configurazioni tipo
+  var tipoLabels = {
+    bambino:   { nomeLabel: 'Nome del bambino/a', desc: 'Inserisci il nome e una breve descrizione che aiuti il ritrovamento.' },
+    animale:   { nomeLabel: 'Nome dell\'animale',  desc: 'Inserisci il nome e il tipo di animale.' },
+    caregiver: { nomeLabel: 'Nome della persona',  desc: 'Inserisci il nome e informazioni utili per chi la trova.' },
+    oggetto:   { nomeLabel: 'Descrizione oggetto', desc: 'Descrivi l\'oggetto in modo che sia facilmente identificabile.' },
+    sos:       { nomeLabel: 'Il tuo nome',          desc: 'Inserisci il tuo nome e informazioni utili.' }
+  };
+
+  var ruoliOptions = [
+    'mamma','papà','nonno','nonna','zio','zia',
+    'fratello','sorella','tutore','proprietario','altro'
+  ];
+
+  // Rendi funzioni globali
+  window.selezionaTipo  = selezionaTipo;
+  window.vaiStep        = vaiStep;
+  window.setNumContatti = setNumContatti;
+  window.salvaTag       = salvaTag;
+  window.doLogout       = doLogout;
+
+  function selezionaTipo(tipo) {
+    tipoSelezionato = tipo;
+    document.querySelectorAll('.tipo-btn').forEach(function(b) { b.classList.remove('selected'); });
+    var btn = document.getElementById('tipo-' + tipo);
+    if (btn) btn.classList.add('selected');
+    var next = document.getElementById('btn-next1');
+    if (next) next.disabled = false;
+  }
+
+  function vaiStep(n) {
+    // Validazione
+    if (n === 2 && !tipoSelezionato) {
+      showAlert('Seleziona un tipo di tag.', 'err'); return;
+    }
+    if (n === 3) {
+      var nome = val('inp-nome');
+      if (!nome) { showAlert('Inserisci il nome.', 'err'); return; }
+    }
+
+    stepCorrente = n;
+    hideAll();
+    showAlert('', '');
+
+    // Aggiorna progress
+    [1,2,3].forEach(function(i) {
+      var s = document.getElementById('step' + i);
+      if (!s) return;
+      s.classList.toggle('active', i === n);
+      s.classList.toggle('done',   i < n);
+      if (i < 3) {
+        var l = document.getElementById('line' + i);
+        if (l) l.classList.toggle('done', i < n);
+      }
+    });
+
+    // Aggiorna step 2 con labels per tipo
+    if (n === 2 && tipoSelezionato) {
+      var cfg = tipoLabels[tipoSelezionato];
+      var t = document.getElementById('step2-title');
+      var d = document.getElementById('step2-desc');
+      var l = document.getElementById('label-nome');
+      if (t) t.textContent = 'Dettagli';
+      if (d) d.textContent = cfg.desc;
+      if (l) l.innerHTML   = cfg.nomeLabel + ' <span style="color:var(--red)">*</span>';
+    }
+
+    // Mostra panel corretto
+    var panel = document.getElementById('panel-step' + n);
+    if (panel) panel.classList.remove('hidden');
+
+    // Step 3 → render contatti
+    if (n === 3) renderContattiForm();
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function hideAll() {
+    [1,2,3].forEach(function(i) {
+      var p = document.getElementById('panel-step' + i);
+      if (p) p.classList.add('hidden');
+    });
+  }
+
+  function val(id) {
+    var el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+  }
+
+  function showAlert(msg, tipo) {
+    var el = document.getElementById('alert-main');
+    if (!el) return;
+    el.textContent = msg;
+    el.className   = 'alert' + (msg ? ' ' + tipo : '');
+    if (!msg) el.style.display = 'none';
+  }
+
+  function setNumContatti(n) {
+    numContatti = n;
+    document.querySelectorAll('.num-btn').forEach(function(b, i) {
+      b.classList.toggle('active', i === n - 1);
+    });
+    renderContattiForm();
+  }
+
+  function renderContattiForm() {
+    var container = document.getElementById('contatti-container');
+    if (!container) return;
+    container.innerHTML = '';
+    for (var i = 1; i <= numContatti; i++) {
+      var div = document.createElement('div');
+      div.className = 'contatto-card';
+      div.innerHTML =
+        '<div class="contatto-header">Contatto ' + i + '</div>' +
+        '<div class="row">' +
+          '<div class="field">' +
+            '<label>Ruolo</label>' +
+            '<select id="ruolo' + i + '">' +
+              ruoliOptions.map(function(r, idx) {
+                return '<option value="' + r + '"' + (idx === i-1 ? ' selected' : '') + '>' +
+                  r.charAt(0).toUpperCase() + r.slice(1) + '</option>';
+              }).join('') +
+            '</select>' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>Nome <span style="color:var(--red)">*</span></label>' +
+            '<input id="nome' + i + '" type="text" placeholder="es. Isabella" maxlength="30"/>' +
+          '</div>' +
+        '</div>' +
+        '<div class="field" style="margin-bottom:0">' +
+          '<label>Telefono <span style="color:var(--red)">*</span></label>' +
+          '<input id="tel' + i + '" type="tel" placeholder="+393331234567"/>' +
+        '</div>';
+      container.appendChild(div);
+    }
+  }
+
+  function normalizzaTel(t) {
+    t = t.replace(/[\s\-]/g, '');
+    if (t && !t.startsWith('+')) t = '+' + t;
+    return t;
+  }
+
+  async function salvaTag() {
+    if (!currentUser) { showAlert('Sessione scaduta. Accedi di nuovo.', 'err'); return; }
+    if (!tagId)        { showAlert('ID tag mancante nell\'URL.', 'err'); return; }
+
+    var nome    = val('inp-nome');
+    var descr   = val('inp-desc');
+    var autoSec = parseInt(val('inp-autosec')) || 0;
+
+    if (!nome) { showAlert('Inserisci il nome.', 'err'); return; }
+
+    var contatti = [];
+    for (var i = 1; i <= numContatti; i++) {
+      var r = val('ruolo' + i);
+      var n = val('nome'  + i);
+      var t = normalizzaTel(val('tel' + i));
+      if (!n || !t) { showAlert('Compila tutti i campi del contatto ' + i + '.', 'err'); return; }
+      contatti.push({ ruolo: r, nome: n, tel: t, wa: t.replace(/^\+/, '') });
+    }
+
+    // Loading
+    var btn  = document.getElementById('btn-salva');
+    var spin = document.getElementById('spin-salva');
+    var lbl  = document.getElementById('lbl-salva');
+    if (btn)  btn.disabled = true;
+    if (spin) spin.style.display = 'block';
+    if (lbl)  lbl.style.opacity  = '0';
+
+    try {
+      await setDoc(doc(db, 'tags', tagId), {
+        proprietario:       currentUser.uid,
+        tipo:               tipoSelezionato,
+        nome:               nome,
+        identificativo:     descr,
+        autoSec:            autoSec,
+        contatti:           contatti,
+        registrato:         true,
+        dataRegistrazione:  new Date().toISOString()
+      });
+
+      // Mostra successo
+      document.getElementById('steps-bar').style.display    = 'none';
+      document.getElementById('alert-main').style.display   = 'none';
+      hideAll();
+      var sv = document.getElementById('view-success');
+      if (sv) sv.style.display = 'flex';
+      var urlBox = document.getElementById('success-url');
+      if (urlBox) urlBox.textContent =
+        'https://simonechigioni.github.io/tirova/tirova-sos-v1.0.html?id=' + tagId;
+
+    } catch(e) {
+      showAlert('Errore nel salvataggio: ' + e.message, 'err');
+      if (btn)  btn.disabled = false;
+      if (spin) spin.style.display = 'none';
+      if (lbl)  lbl.style.opacity  = '1';
+    }
+  }
+
+  async function doLogout() {
+    await signOut(auth);
+    window.location.href = 'tirova-auth-v1.0.html';
+  }
+
+  // Init
+  renderContattiForm();
+</script>
+</body>
+</html>

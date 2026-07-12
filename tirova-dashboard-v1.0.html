@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TiRoVA — Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --red:      #D32F2F;
+      --red-dark: #B71C1C;
+      --ink:      #1A1A1A;
+      --ink-soft: #444444;
+      --muted:    #888888;
+      --bg:       #F7F7F7;
+      --white:    #FFFFFF;
+      --border:   #E8E8E8;
+      --radius:   16px;
+      --shadow:   0 2px 16px rgba(0,0,0,0.08);
+      --green:    #2E7D32;
+      --green-bg: #E8F5E9;
+    }
+    body {
+      background: var(--bg); color: var(--ink);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100dvh; display: flex; flex-direction: column; align-items: center;
+    }
+
+    /* Header */
+    .header {
+      width: 100%; background: var(--white);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      justify-content: space-between; padding: 14px 20px;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .header img { height: 36px; object-fit: contain; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .header-email { font-size: 12px; color: var(--muted); }
+    .btn-logout {
+      background: none; border: 1px solid var(--border);
+      color: var(--muted); font-size: 12px; font-weight: 600;
+      padding: 6px 12px; border-radius: 8px; cursor: pointer;
+    }
+    .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+    .main {
+      width: 100%; max-width: 560px;
+      padding: 28px 16px 60px;
+    }
+
+    /* Benvenuto */
+    .welcome {
+      margin-bottom: 24px;
+    }
+    .welcome-title {
+      font-size: 22px; font-weight: 800; color: var(--ink);
+    }
+    .welcome-sub { font-size: 14px; color: var(--muted); margin-top: 4px; }
+
+    /* Stat bar */
+    .stat-bar {
+      display: flex; gap: 10px; margin-bottom: 24px;
+    }
+    .stat-card {
+      flex: 1; background: var(--white); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px; box-shadow: var(--shadow); text-align: center;
+    }
+    .stat-num  { font-size: 28px; font-weight: 800; color: var(--red); }
+    .stat-label { font-size: 11px; color: var(--muted); font-weight: 600;
+      text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
+
+    /* Section title */
+    .section-title {
+      font-size: 11px; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--muted);
+      margin: 0 0 12px; display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    /* Tag card */
+    .tag-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 20px;
+      margin-bottom: 12px; box-shadow: var(--shadow);
+      display: flex; gap: 14px; align-items: flex-start;
+    }
+    .tag-tipo-icon {
+      font-size: 32px; line-height: 1; flex-shrink: 0;
+      width: 52px; height: 52px; border-radius: 12px;
+      background: var(--bg); display: flex;
+      align-items: center; justify-content: center;
+    }
+    .tag-body { flex: 1; min-width: 0; }
+    .tag-nome { font-size: 17px; font-weight: 800; color: var(--ink);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tag-meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .tag-tipo-badge {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .1em; padding: 2px 8px; border-radius: 999px;
+      background: #FFEBEE; color: var(--red);
+    }
+    .tag-id-badge {
+      font-size: 10px; font-weight: 700; font-family: monospace;
+      color: var(--muted); background: var(--bg);
+      padding: 2px 8px; border-radius: 999px;
+    }
+    .tag-contatti { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+    .tag-url {
+      font-size: 11px; color: var(--red); font-family: monospace;
+      margin-top: 6px; word-break: break-all;
+      background: var(--bg); padding: 6px 10px; border-radius: 8px;
+    }
+    .tag-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .btn-action {
+      padding: 7px 14px; border-radius: 8px; font-size: 12px;
+      font-weight: 700; cursor: pointer; border: none; transition: opacity .15s;
+    }
+    .btn-action:hover { opacity: .8; }
+    .btn-test   { background: var(--green-bg); color: var(--green); }
+    .btn-edit   { background: #E3F2FD; color: #1565C0; }
+    .btn-delete { background: #FFEBEE; color: var(--red); }
+    .btn-copy   { background: var(--bg); color: var(--ink-soft); border: 1px solid var(--border); }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center; padding: 48px 24px;
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+    }
+    .empty-icon  { font-size: 48px; margin-bottom: 14px; }
+    .empty-title { font-size: 18px; font-weight: 800; color: var(--ink); margin-bottom: 6px; }
+    .empty-desc  { font-size: 13px; color: var(--muted); line-height: 1.6; max-width: 280px; margin: 0 auto; }
+
+    /* Loading */
+    .loading-wrap { text-align: center; padding: 48px 0; }
+    .spinner { width: 40px; height: 40px; border: 3px solid var(--border);
+      border-top-color: var(--red); border-radius: 50%;
+      animation: spin .9s linear infinite; margin: 0 auto 14px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 14px; color: var(--muted); }
+
+    /* Alert */
+    .alert { display: none; padding: 12px 16px; border-radius: 10px;
+      font-size: 13px; font-weight: 600; margin-bottom: 16px; }
+    .alert.ok  { background: var(--green-bg); border: 1px solid #A5D6A7; color: var(--green); display: block; }
+    .alert.err { background: #FFEBEE; border: 1px solid #FFCDD2; color: var(--red); display: block; }
+
+    /* Modal elimina */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.5); z-index: 100;
+      align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: var(--white); border-radius: var(--radius);
+      padding: 28px 24px; max-width: 360px; width: 100%;
+      box-shadow: 0 8px 32px rgba(0,0,0,.2);
+    }
+    .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .modal-desc  { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+    .modal-btns  { display: flex; gap: 10px; }
+    .btn-modal-cancel {
+      flex: 1; padding: 13px; border-radius: 10px;
+      border: 1.5px solid var(--border); background: var(--white);
+      font-size: 14px; font-weight: 700; cursor: pointer; color: var(--ink-soft);
+    }
+    .btn-modal-delete {
+      flex: 1; padding: 13px; border-radius: 10px;
+      border: none; background: var(--red); color: #fff;
+      font-size: 14px; font-weight: 800; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <img src="logo.png" alt="TiRoVA"/>
+  <div class="header-right">
+    <span class="header-email" id="header-email"></span>
+    <button class="btn-logout" onclick="doLogout()">Esci</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Benvenuto -->
+  <div class="welcome">
+    <div class="welcome-title">Ciao, <span id="nome-utente">...</span> 👋</div>
+    <div class="welcome-sub">Gestisci i tuoi tag TiRoVA</div>
+  </div>
+
+  <!-- Alert -->
+  <div class="alert" id="alert-main"></div>
+
+  <!-- Stat bar -->
+  <div class="stat-bar">
+    <div class="stat-card">
+      <div class="stat-num"  id="stat-totale">—</div>
+      <div class="stat-label">Tag attivi</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num"  id="stat-contatti">—</div>
+      <div class="stat-label">Contatti salvati</div>
+    </div>
+  </div>
+
+  <!-- Lista tag -->
+  <div class="section-title">I tuoi tag</div>
+  <div id="tag-list">
+    <div class="loading-wrap">
+      <div class="spinner"></div>
+      <div class="loading-text">Caricamento tag...</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal conferma elimina -->
+<div class="modal-overlay" id="modal-elimina">
+  <div class="modal">
+    <div class="modal-title">Eliminare il tag?</div>
+    <div class="modal-desc">Questa azione è irreversibile. Il tag dovrà essere riconfigurato prima di poter essere usato di nuovo.</div>
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" onclick="chiudiModal()">Annulla</button>
+      <button class="btn-modal-delete" onclick="confermaElimina()">Elimina</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, collection, query, where, getDocs, doc, getDoc, deleteDoc }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDUe5uU7AETL5tjKU3PqwxIjrzYCvKnZnQ",
+    authDomain: "sosbambini-d5083.firebaseapp.com",
+    projectId: "sosbambini-d5083",
+    storageBucket: "sosbambini-d5083.firebasestorage.app",
+    messagingSenderId: "232619660802",
+    appId: "1:232619660802:web:9235c7cd4d20b9a831b91b"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  var currentUser  = null;
+  var tagDaEliminare = null;
+  var BASE_URL = 'https://simonechigioni.github.io/tirova/tirova-sos-v1.0.html?id=';
+
+  var tipoIcon = {
+    bambino:   '👶', animale: '🐾',
+    caregiver: '🧓', oggetto: '🎒', sos: '🆘'
+  };
+  var tipoLabel = {
+    bambino:   'Bambino/a', animale: 'Animale',
+    caregiver: 'Persona assistita', oggetto: 'Oggetto', sos: 'SOS'
+  };
+
+  // Rendi globali
+  window.doLogout      = doLogout;
+  window.testTag       = testTag;
+  window.modificaTag   = modificaTag;
+  window.eliminaTag    = eliminaTag;
+  window.chiudiModal   = chiudiModal;
+  window.confermaElimina = confermaElimina;
+  window.copiaUrl      = copiaUrl;
+
+  onAuthStateChanged(auth, async function(user) {
+    if (!user) { window.location.href = 'tirova-auth-v1.0.html'; return; }
+    currentUser = user;
+
+    // Mostra email header
+    var emailEl = document.getElementById('header-email');
+    if (emailEl) emailEl.textContent = user.email;
+
+    // Carica nome utente
+    try {
+      var snap = await getDoc(doc(db, 'users', user.uid));
+      if (snap.exists()) {
+        var nome = snap.data().nome || user.email;
+        var nomeEl = document.getElementById('nome-utente');
+        if (nomeEl) nomeEl.textContent = nome.split(' ')[0];
+      }
+    } catch(e) {}
+
+    caricaTag();
+  });
+
+  async function caricaTag() {
+    var listEl = document.getElementById('tag-list');
+    try {
+      var q    = query(collection(db, 'tags'), where('proprietario', '==', currentUser.uid));
+      var snap = await getDocs(q);
+
+      if (snap.empty) {
+        listEl.innerHTML =
+          '<div class="empty-state">' +
+            '<div class="empty-icon">🏷️</div>' +
+            '<div class="empty-title">Nessun tag configurato</div>' +
+            '<div class="empty-desc">Scansiona un tag TiRoVA per iniziare la configurazione.</div>' +
+          '</div>';
+        document.getElementById('stat-totale').textContent   = '0';
+        document.getElementById('stat-contatti').textContent = '0';
+        return;
+      }
+
+      var totTag = 0, totContatti = 0;
+      listEl.innerHTML = '';
+
+      snap.forEach(function(d) {
+        var data     = d.data();
+        var contatti = data.contatti || [];
+        totTag++;
+        totContatti += contatti.length;
+
+        var nomiContatti = contatti.map(function(c) {
+          return c.ruolo + ' ' + c.nome + ' (' + c.tel + ')';
+        }).join('<br>');
+
+        var tagUrl = BASE_URL + d.id;
+        var icon   = tipoIcon[data.tipo]  || '🏷️';
+        var label  = tipoLabel[data.tipo] || data.tipo;
+
+        var div = document.createElement('div');
+        div.className = 'tag-card';
+        div.innerHTML =
+          '<div class="tag-tipo-icon">' + icon + '</div>' +
+          '<div class="tag-body">' +
+            '<div class="tag-nome">' + (data.nome || 'Senza nome') + '</div>' +
+            '<div class="tag-meta">' +
+              '<span class="tag-tipo-badge">' + label + '</span>' +
+              '<span class="tag-id-badge">#' + d.id + '</span>' +
+            '</div>' +
+            (data.identificativo ? '<div class="tag-contatti" style="margin-top:6px;color:var(--ink-soft);">' + data.identificativo + '</div>' : '') +
+            '<div class="tag-contatti">' + nomiContatti + '</div>' +
+            '<div class="tag-url">' + tagUrl + '</div>' +
+            '<div class="tag-actions">' +
+              '<button class="btn-action btn-test"   onclick="testTag(\''   + d.id + '\')">▶ Testa</button>' +
+              '<button class="btn-action btn-copy"   onclick="copiaUrl(\''  + tagUrl + '\')">📋 Copia URL</button>' +
+              '<button class="btn-action btn-edit"   onclick="modificaTag(\'' + d.id + '\')">✏️ Modifica</button>' +
+              '<button class="btn-action btn-delete" onclick="eliminaTag(\'' + d.id + '\')">🗑 Elimina</button>' +
+            '</div>' +
+          '</div>';
+        listEl.appendChild(div);
+      });
+
+      document.getElementById('stat-totale').textContent   = totTag;
+      document.getElementById('stat-contatti').textContent = totContatti;
+
+    } catch(e) {
+      listEl.innerHTML = '<div class="empty-state"><div class="empty-desc" style="color:var(--red);">Errore nel caricamento: ' + e.message + '</div></div>';
+    }
+  }
+
+  function testTag(id) {
+    window.open(BASE_URL + id, '_blank');
+  }
+
+  function modificaTag(id) {
+    window.location.href = 'tirova-configura-v1.0.html?id=' + id;
+  }
+
+  function eliminaTag(id) {
+    tagDaEliminare = id;
+    document.getElementById('modal-elimina').classList.add('show');
+  }
+
+  function chiudiModal() {
+    tagDaEliminare = null;
+    document.getElementById('modal-elimina').classList.remove('show');
+  }
+
+  async function confermaElimina() {
+    if (!tagDaEliminare) return;
+    try {
+      await deleteDoc(doc(db, 'tags', tagDaEliminare));
+      chiudiModal();
+      showAlert('Tag eliminato correttamente.', 'ok');
+      caricaTag();
+    } catch(e) {
+      chiudiModal();
+      showAlert('Errore: ' + e.message, 'err');
+    }
+  }
+
+  function copiaUrl(url) {
+    navigator.clipboard.writeText(url).then(function() {
+      showAlert('URL copiato negli appunti!', 'ok');
+    }).catch(function() {
+      showAlert('Copia manuale: ' + url, 'ok');
+    });
+  }
+
+  function showAlert(msg, tipo) {
+    var el = document.getElementById('alert-main');
+    if (!el) return;
+    el.textContent = msg;
+    el.className   = 'alert ' + tipo;
+    setTimeout(function() { el.className = 'alert'; }, 4000);
+  }
+
+  async function doLogout() {
+    await signOut(auth);
+    window.location.href = 'tirova-auth-v1.0.html';
+  }
+</script>
+</body>
+</html>

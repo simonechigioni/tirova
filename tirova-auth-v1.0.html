@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TiRoVA — Accedi</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --red:      #D32F2F;
+      --red-dark: #B71C1C;
+      --ink:      #1A1A1A;
+      --ink-soft: #444444;
+      --muted:    #888888;
+      --bg:       #F7F7F7;
+      --white:    #FFFFFF;
+      --border:   #E8E8E8;
+      --radius:   16px;
+      --shadow:   0 2px 16px rgba(0,0,0,0.08);
+    }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .header {
+      width: 100%;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 20px;
+    }
+    .header img { height: 36px; object-fit: contain; }
+
+    .main {
+      width: 100%;
+      max-width: 440px;
+      padding: 36px 16px 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Tab switcher */
+    .tabs {
+      display: flex;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px;
+      width: 100%;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+    }
+    .tab {
+      flex: 1; padding: 10px;
+      border: none; background: none;
+      font-size: 14px; font-weight: 700;
+      color: var(--muted); cursor: pointer;
+      border-radius: 9px;
+      transition: all .2s;
+    }
+    .tab.active {
+      background: var(--red);
+      color: var(--white);
+    }
+
+    /* Card form */
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      width: 100%;
+      box-shadow: var(--shadow);
+    }
+
+    .card-title {
+      font-size: 20px; font-weight: 800;
+      color: var(--ink); margin-bottom: 6px;
+    }
+    .card-desc {
+      font-size: 13px; color: var(--muted);
+      margin-bottom: 24px; line-height: 1.5;
+    }
+
+    .field { margin-bottom: 16px; }
+    .field:last-of-type { margin-bottom: 0; }
+    label {
+      display: block; font-size: 13px;
+      font-weight: 600; color: var(--ink-soft);
+      margin-bottom: 7px;
+    }
+    input {
+      width: 100%;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--ink);
+      font-size: 15px;
+      padding: 13px 14px;
+      outline: none;
+      transition: border-color .2s;
+      font-family: inherit;
+    }
+    input:focus { border-color: var(--red); background: var(--white); }
+    input::placeholder { color: #bbb; }
+
+    .btn-primary {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 16px; border-radius: 12px;
+      border: none; background: var(--red); color: var(--white);
+      font-size: 16px; font-weight: 800; cursor: pointer;
+      margin-top: 20px; transition: opacity .15s, transform .1s;
+    }
+    .btn-primary:hover { opacity: .9; }
+    .btn-primary:active { transform: scale(.98); }
+    .btn-primary:disabled { opacity: .4; pointer-events: none; }
+
+    .link-btn {
+      background: none; border: none; color: var(--red);
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      text-decoration: underline; padding: 0;
+    }
+    .link-btn:hover { color: var(--red-dark); }
+
+    .footer-note {
+      text-align: center; margin-top: 16px;
+      font-size: 13px; color: var(--muted);
+    }
+
+    /* Alert */
+    .alert {
+      display: none; padding: 12px 16px;
+      border-radius: 10px; font-size: 13px;
+      font-weight: 600; margin-bottom: 16px;
+      line-height: 1.4;
+    }
+    .alert.ok  { background: #E8F5E9; border: 1px solid #A5D6A7; color: #2E7D32; display: block; }
+    .alert.err { background: #FFEBEE; border: 1px solid #FFCDD2; color: var(--red); display: block; }
+
+    /* Spinner inline */
+    .spinner-sm {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Divisore */
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 20px 0; color: var(--muted); font-size: 12px;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* Tag info badge */
+    .tag-badge {
+      display: flex; align-items: center; gap: 10px;
+      background: #FFF8E1; border: 1px solid #FFE082;
+      border-radius: 10px; padding: 10px 14px;
+      margin-bottom: 20px; font-size: 13px; color: #795548;
+    }
+    .tag-badge strong { color: var(--ink); }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <img src="logo.png" alt="TiRoVA"/>
+</div>
+
+<div class="main">
+
+  <!-- Badge tag in attesa -->
+  <div class="tag-badge" id="tag-badge" style="display:none; width:100%;">
+    🏷️ Stai configurando il tag <strong id="tag-badge-id"></strong>
+  </div>
+
+  <!-- Tab login / registrati -->
+  <div class="tabs">
+    <button class="tab active" id="tab-login"  onclick="mostraTab('login')">Accedi</button>
+    <button class="tab"        id="tab-signup" onclick="mostraTab('signup')">Registrati</button>
+  </div>
+
+  <!-- ── LOGIN ── -->
+  <div class="card" id="panel-login">
+    <div class="card-title">Bentornato</div>
+    <div class="card-desc">Accedi per gestire i tuoi tag TiRoVA.</div>
+    <div class="alert" id="alert-login"></div>
+
+    <div class="field">
+      <label>Email</label>
+      <input id="login-email" type="email" placeholder="la-tua@email.it" autocomplete="email"/>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password"/>
+    </div>
+
+    <button class="btn-primary" id="btn-login" onclick="doLogin()">
+      <span class="spinner-sm" id="spin-login"></span>
+      <span id="lbl-login">Accedi</span>
+    </button>
+
+    <div class="divider">oppure</div>
+
+    <div class="footer-note">
+      Password dimenticata?
+      <button class="link-btn" onclick="mostraTab('reset')">Reimposta qui</button>
+    </div>
+  </div>
+
+  <!-- ── REGISTRATI ── -->
+  <div class="card" id="panel-signup" style="display:none;">
+    <div class="card-title">Crea account</div>
+    <div class="card-desc">Registrati gratuitamente per attivare il tuo tag TiRoVA.</div>
+    <div class="alert" id="alert-signup"></div>
+
+    <div class="field">
+      <label>Nome e cognome</label>
+      <input id="signup-nome" type="text" placeholder="Mario Rossi" autocomplete="name"/>
+    </div>
+    <div class="field">
+      <label>Email</label>
+      <input id="signup-email" type="email" placeholder="la-tua@email.it" autocomplete="email"/>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input id="signup-pass" type="password" placeholder="Minimo 8 caratteri" autocomplete="new-password"/>
+    </div>
+    <div class="field">
+      <label>Conferma password</label>
+      <input id="signup-pass2" type="password" placeholder="Ripeti la password" autocomplete="new-password"/>
+    </div>
+
+    <button class="btn-primary" id="btn-signup" onclick="doSignup()">
+      <span class="spinner-sm" id="spin-signup"></span>
+      <span id="lbl-signup">Crea account</span>
+    </button>
+
+    <div class="footer-note" style="margin-top:16px;">
+      Hai già un account?
+      <button class="link-btn" onclick="mostraTab('login')">Accedi</button>
+    </div>
+  </div>
+
+  <!-- ── RESET PASSWORD ── -->
+  <div class="card" id="panel-reset" style="display:none;">
+    <div class="card-title">Reimposta password</div>
+    <div class="card-desc">Inserisci la tua email e ti inviamo un link per reimpostare la password.</div>
+    <div class="alert" id="alert-reset"></div>
+
+    <div class="field">
+      <label>Email</label>
+      <input id="reset-email" type="email" placeholder="la-tua@email.it" autocomplete="email"/>
+    </div>
+
+    <button class="btn-primary" id="btn-reset" onclick="doReset()">
+      <span class="spinner-sm" id="spin-reset"></span>
+      <span id="lbl-reset">Invia link di reset</span>
+    </button>
+
+    <div class="footer-note" style="margin-top:16px;">
+      Ricordi la password?
+      <button class="link-btn" onclick="mostraTab('login')">Torna al login</button>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+    sendPasswordResetEmail, onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDUe5uU7AETL5tjKU3PqwxIjrzYCvKnZnQ",
+    authDomain: "sosbambini-d5083.firebaseapp.com",
+    projectId: "sosbambini-d5083",
+    storageBucket: "sosbambini-d5083.firebasestorage.app",
+    messagingSenderId: "232619660802",
+    appId: "1:232619660802:web:9235c7cd4d20b9a831b91b"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  // Leggi tag ID dall'URL
+  const params = new URLSearchParams(window.location.search);
+  const tagId  = params.get('id');
+
+  if (tagId) {
+    var badge = document.getElementById('tag-badge');
+    var badgeId = document.getElementById('tag-badge-id');
+    if (badge) badge.style.display = 'flex';
+    if (badgeId) badgeId.textContent = tagId;
+  }
+
+  // Se già loggato → vai direttamente a configura o dashboard
+  onAuthStateChanged(auth, function(user) {
+    if (user) {
+      if (tagId) {
+        window.location.href = 'tirova-configura-v1.0.html?id=' + tagId;
+      } else {
+        window.location.href = 'tirova-dashboard-v1.0.html';
+      }
+    }
+  });
+
+  // Rendi funzioni globali
+  window.mostraTab = mostraTab;
+  window.doLogin   = doLogin;
+  window.doSignup  = doSignup;
+  window.doReset   = doReset;
+
+  function mostraTab(tab) {
+    ['login','signup','reset'].forEach(function(t) {
+      document.getElementById('panel-' + t).style.display = t === tab ? 'block' : 'none';
+      var btn = document.getElementById('tab-' + t);
+      if (btn) btn.classList.toggle('active', t === tab);
+    });
+    // Nascondi tab reset dal tab switcher visivamente
+    var tabLogin  = document.getElementById('tab-login');
+    var tabSignup = document.getElementById('tab-signup');
+    if (tab === 'reset') {
+      if (tabLogin)  tabLogin.classList.remove('active');
+      if (tabSignup) tabSignup.classList.remove('active');
+    }
+  }
+
+  function val(id) {
+    var el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+  }
+
+  function setAlert(id, msg, tipo) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'alert ' + (msg ? tipo : '');
+    if (!msg) el.style.display = 'none';
+  }
+
+  function setLoading(prefix, loading) {
+    var btn  = document.getElementById('btn-'  + prefix);
+    var spin = document.getElementById('spin-' + prefix);
+    var lbl  = document.getElementById('lbl-'  + prefix);
+    if (btn)  btn.disabled = loading;
+    if (spin) spin.style.display = loading ? 'block' : 'none';
+    if (lbl)  lbl.style.opacity  = loading ? '0' : '1';
+  }
+
+  // Messaggi errore Firebase in italiano
+  function errMsg(code) {
+    var map = {
+      'auth/invalid-email':          'Email non valida.',
+      'auth/user-not-found':         'Nessun account trovato con questa email.',
+      'auth/wrong-password':         'Password errata.',
+      'auth/invalid-credential':     'Email o password non corretti.',
+      'auth/email-already-in-use':   'Email già registrata. Prova ad accedere.',
+      'auth/weak-password':          'La password deve essere di almeno 8 caratteri.',
+      'auth/too-many-requests':      'Troppi tentativi. Riprova tra qualche minuto.',
+      'auth/network-request-failed': 'Errore di rete. Controlla la connessione.'
+    };
+    return map[code] || 'Errore: ' + code;
+  }
+
+  async function doLogin() {
+    var email = val('login-email');
+    var pass  = val('login-pass');
+    if (!email || !pass) { setAlert('alert-login', 'Compila tutti i campi.', 'err'); return; }
+    setLoading('login', true);
+    setAlert('alert-login', '', '');
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+      // onAuthStateChanged gestisce il redirect
+    } catch(e) {
+      setAlert('alert-login', errMsg(e.code), 'err');
+      setLoading('login', false);
+    }
+  }
+
+  async function doSignup() {
+    var nome  = val('signup-nome');
+    var email = val('signup-email');
+    var pass  = val('signup-pass');
+    var pass2 = val('signup-pass2');
+    if (!nome || !email || !pass || !pass2) {
+      setAlert('alert-signup', 'Compila tutti i campi.', 'err'); return;
+    }
+    if (pass !== pass2) {
+      setAlert('alert-signup', 'Le password non coincidono.', 'err'); return;
+    }
+    if (pass.length < 8) {
+      setAlert('alert-signup', 'La password deve essere di almeno 8 caratteri.', 'err'); return;
+    }
+    setLoading('signup', true);
+    setAlert('alert-signup', '', '');
+    try {
+      var cred = await createUserWithEmailAndPassword(auth, email, pass);
+      // Salva profilo utente su Firestore
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        nome: nome,
+        email: email,
+        dataRegistrazione: new Date().toISOString()
+      });
+      // onAuthStateChanged gestisce il redirect
+    } catch(e) {
+      setAlert('alert-signup', errMsg(e.code), 'err');
+      setLoading('signup', false);
+    }
+  }
+
+  async function doReset() {
+    var email = val('reset-email');
+    if (!email) { setAlert('alert-reset', 'Inserisci la tua email.', 'err'); return; }
+    setLoading('reset', true);
+    setAlert('alert-reset', '', '');
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setAlert('alert-reset', '✓ Email inviata! Controlla la tua casella di posta (anche spam).', 'ok');
+    } catch(e) {
+      setAlert('alert-reset', errMsg(e.code), 'err');
+    } finally {
+      setLoading('reset', false);
+    }
+  }
+</script>
+</body>
+</html>
