@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TiRoVA</title>
+  <script>
+    // Reindirizza a tirova-sos con i parametri URL
+    var params = window.location.search;
+    if (params && params.indexOf('id=') !== -1) {
+      window.location.replace('tirova-sos-v1.0.html' + params);
+    } else {
+      window.location.replace('tirova-auth-v1.0.html');
+    }
+  </script>
+</head>
+<body></body>
+</html>
