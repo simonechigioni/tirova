@@ -416,7 +416,7 @@
         var idx = i + 1;
         var bw = document.getElementById('btn-wa'  + idx);
         var bs = document.getElementById('btn-sms' + idx);
-        if (bw) { bw.href = 'https://wa.me/' + c.wa + '?text=' + msgBody; bw.removeAttribute('disabled'); }
+        if (bw) { bw.href = 'whatsapp://send?phone=' + c.wa + '&text=' + msgBody; bw.removeAttribute('disabled'); }
         if (bs) { bs.href = 'sms:' + c.tel + '?body=' + msgBody; bs.removeAttribute('disabled'); }
       });
     }
@@ -428,7 +428,7 @@
       if (lbl) lbl.textContent = msg;
       var body = buildMsg('Non riesco a ottenere la posizione GPS. Chiama subito!');
       enableButtons(body);
-      if (contatti[0]) startCountdown('https://wa.me/' + contatti[0].wa + '?text=' + body);
+      if (contatti[0]) startCountdown('whatsapp://send?phone=' + contatti[0].wa + '&text=' + body);
     }
 
     function setGpsOk(lat, lon) {
@@ -443,7 +443,7 @@
       if (maps) { maps.href = mapsUrl; maps.removeAttribute('disabled'); }
       var body = buildMsg('\u00c8 qui: ' + mapsUrl);
       enableButtons(body);
-      if (contatti[0]) startCountdown('https://wa.me/' + contatti[0].wa + '?text=' + body);
+      if (contatti[0]) startCountdown('whatsapp://send?phone=' + contatti[0].wa + '&text=' + body);
     }
 
     if (!navigator.geolocation) {
