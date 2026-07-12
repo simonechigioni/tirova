@@ -4,15 +4,38 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TiRoVA</title>
+  <style>
+    body { background:#F7F7F7; font-family:'Segoe UI',system-ui,sans-serif;
+      display:flex; align-items:center; justify-content:center; min-height:100vh; }
+    .spinner { width:40px; height:40px; border:3px solid #eee;
+      border-top-color:#D32F2F; border-radius:50%; animation:spin .9s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="spinner"></div>
   <script>
-    // Reindirizza a tirova-sos con i parametri URL
-    var params = window.location.search;
-    if (params && params.indexOf('id=') !== -1) {
-      window.location.replace('tirova-sos-v1.0.html' + params);
+    // Leggi parametro id in tutti i modi possibili
+    var search = window.location.search;
+    var hash   = window.location.hash;
+
+    // Prova da search string
+    var id = null;
+    if (search) {
+      var match = search.match(/[?&]id=([^&]+)/);
+      if (match) id = match[1];
+    }
+    // Prova da hash
+    if (!id && hash) {
+      var match2 = hash.match(/id=([^&]+)/);
+      if (match2) id = match2[1];
+    }
+
+    if (id) {
+      window.location.href = 'tirova-sos-v1.0.html?id=' + id;
     } else {
-      window.location.replace('tirova-auth-v1.0.html');
+      window.location.href = 'tirova-auth-v1.0.html';
     }
   </script>
-</head>
-<body></body>
+</body>
 </html>
