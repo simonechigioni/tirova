@@ -222,7 +222,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDUe5uU7AETL5tjKU3PqwxIjrzYCvKnZnQ",
@@ -253,14 +253,42 @@
     try {
       const snap = await getDoc(doc(db, 'tags', id));
       if (!snap.exists() || !snap.data().registrato) {
-        // Tag non registrato → vai alla pagina di configurazione
         window.location.href = 'tirova-auth-v1.0.html#' + id;
         return;
       }
       show('view-loading', false);
-      renderSOS(snap.data());
+      var data = snap.data();
+      renderSOS(data);
+      // Salva scansione (solo se proprietario Premium)
+      if (data.proprietario) {
+        salvaScansione(id, data.proprietario);
+      }
     } catch(e) {
       showError();
+    }
+  }
+
+  async function salvaScansione(tagId, proprietarioUid) {
+    try {
+      // Controlla se proprietario è Premium e non scaduto
+      const userSnap = await getDoc(doc(db, 'users', proprietarioUid));
+      if (!userSnap.exists()) return;
+      var userData = userSnap.data();
+      var isPremium = userData.premium === true;
+      var scadenza  = userData.premiumScadenza;
+      if (!isPremium) return;
+      if (scadenza && new Date(scadenza) < new Date()) return;
+
+      // Salva scansione
+      var scanId = 'scan_' + Date.now();
+      await setDoc(doc(db, 'scansioni', tagId, 'lista', scanId), {
+        timestamp:  new Date().toISOString(),
+        userAgent:  navigator.userAgent,
+        tagId:      tagId
+      });
+    } catch(e) {
+      // Scansione non salvata — non bloccare la pagina SOS
+      console.log('Scansione non registrata:', e.message);
     }
   }
 
@@ -300,13 +328,14 @@
 
     var html =
       '<div class="tipo-banner ' + (cfg.urgente ? 'urgente' : 'normale') + '">' +
-        '<div class="tipo-icon">' + cfg.icon + '</div>' +
+        (data.foto ? '<img src="' + data.foto + '" style="width:64px;height:64px;border-radius:14px;object-fit:cover;flex-shrink:0;border:2px solid rgba(0,0,0,.1);"/>' : '<div class="tipo-icon">' + cfg.icon + '</div>') +
         '<div class="tipo-info">' +
           '<div class="tipo-label">' + cfg.label + '</div>' +
           '<div class="tipo-nome">' + bambino + '</div>' +
           (idDesc ? '<div class="tipo-desc">' + idDesc + '</div>' : '') +
         '</div>' +
       '</div>' +
+      (data.indicazioniMediche ? '<div style="background:#FFF8E1;border:1.5px solid #FFE082;border-radius:14px;padding:14px 16px;width:100%;max-width:420px;margin-bottom:16px;font-size:13px;color:#5D4037;line-height:1.6;"><strong style="display:block;margin-bottom:4px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;">⚕️ Indicazioni mediche</strong>' + data.indicazioniMediche + '</div>' : '') +
 
       '<div class="card">' +
         '<div class="status-row">' +
@@ -444,6 +473,21 @@
       var body = buildMsg('\u00c8 qui: ' + mapsUrl);
       enableButtons(body);
       if (contatti[0]) startCountdown('whatsapp://send?phone=' + contatti[0].wa + '&text=' + body);
+
+      // Aggiorna scansione con posizione GPS
+      if (data.proprietario) {
+        try {
+          var scanId = 'scan_' + Math.floor(Date.now()/1000) * 1000;
+          setDoc(doc(db, 'scansioni', tagId, 'lista', scanId), {
+            timestamp: new Date().toISOString(),
+            lat:       lat,
+            lon:       lon,
+            mapsUrl:   mapsUrl,
+            userAgent: navigator.userAgent,
+            tagId:     tagId
+          }, { merge: true });
+        } catch(e) {}
+      }
     }
 
     if (!navigator.geolocation) {

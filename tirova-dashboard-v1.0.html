@@ -170,6 +170,48 @@
       border: none; background: var(--red); color: #fff;
       font-size: 14px; font-weight: 800; cursor: pointer;
     }
+    /* Premium badge */
+    .premium-banner {
+      background: linear-gradient(135deg, #F57F17, #FF8F00);
+      border-radius: var(--radius); padding: 16px 20px;
+      margin-bottom: 20px; color: #fff;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .premium-icon  { font-size: 32px; flex-shrink: 0; }
+    .premium-title { font-size: 16px; font-weight: 800; }
+    .premium-sub   { font-size: 12px; opacity: .85; margin-top: 2px; }
+    .premium-scad  { font-size: 11px; opacity: .7; margin-top: 4px; }
+
+    .free-banner {
+      background: var(--white); border: 1.5px dashed var(--border);
+      border-radius: var(--radius); padding: 16px 20px;
+      margin-bottom: 20px; display: flex; align-items: center; gap: 14px;
+    }
+    .free-icon  { font-size: 28px; flex-shrink: 0; }
+    .free-title { font-size: 14px; font-weight: 700; color: var(--ink); }
+    .free-sub   { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* Scansioni */
+    .scan-item {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 16px; margin-bottom: 8px;
+      display: flex; gap: 12px; align-items: flex-start;
+    }
+    .scan-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+    .scan-body { flex: 1; }
+    .scan-time  { font-size: 13px; font-weight: 700; color: var(--ink); }
+    .scan-tag   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .scan-pos   { font-size: 12px; color: var(--red); margin-top: 4px; text-decoration: none; display: inline-block; }
+    .scan-device { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .premium-lock {
+      text-align: center; padding: 32px 20px;
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); color: var(--muted);
+    }
+    .premium-lock-icon { font-size: 36px; margin-bottom: 10px; }
+    .premium-lock-title { font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+    .premium-lock-desc  { font-size: 13px; line-height: 1.5; }
   </style>
 </head>
 <body>
@@ -189,6 +231,9 @@
     <div class="welcome-title">Ciao, <span id="nome-utente">...</span> 👋</div>
     <div class="welcome-sub">Gestisci i tuoi tag TiRoVA</div>
   </div>
+
+  <!-- Banner Premium / Free -->
+  <div id="premium-banner" style="display:none;"></div>
 
   <!-- Alert -->
   <div class="alert" id="alert-main"></div>
@@ -213,6 +258,10 @@
       <div class="loading-text">Caricamento tag...</div>
     </div>
   </div>
+
+  <!-- Storico scansioni (solo Premium) -->
+  <div class="section-title" style="margin-top:28px;">📊 Storico scansioni</div>
+  <div id="scan-list"></div>
 
 </div>
 
@@ -248,9 +297,10 @@
   const auth = getAuth(app);
   const db   = getFirestore(app);
 
-  var currentUser  = null;
+  var currentUser    = null;
   var tagDaEliminare = null;
-  var BASE_URL = 'https://simonechigioni.github.io/tirova/tirova-sos-v1.0.html?id=';
+  var isPremium      = false;
+  var BASE_URL = 'https://simonechigioni.github.io/tirova/tirova-sos-v1.1.html#';
 
   var tipoIcon = {
     bambino:   '👶', animale: '🐾',
@@ -261,34 +311,76 @@
     caregiver: 'Persona assistita', oggetto: 'Oggetto', sos: 'SOS'
   };
 
-  // Rendi globali
-  window.doLogout      = doLogout;
-  window.testTag       = testTag;
-  window.modificaTag   = modificaTag;
-  window.eliminaTag    = eliminaTag;
-  window.chiudiModal   = chiudiModal;
+  window.doLogout        = doLogout;
+  window.testTag         = testTag;
+  window.modificaTag     = modificaTag;
+  window.eliminaTag      = eliminaTag;
+  window.chiudiModal     = chiudiModal;
   window.confermaElimina = confermaElimina;
-  window.copiaUrl      = copiaUrl;
+  window.copiaUrl        = copiaUrl;
 
   onAuthStateChanged(auth, async function(user) {
     if (!user) { window.location.href = 'tirova-auth-v1.0.html'; return; }
     currentUser = user;
 
-    // Mostra email header
     var emailEl = document.getElementById('header-email');
     if (emailEl) emailEl.textContent = user.email;
 
-    // Carica nome utente
+    // Carica profilo utente + controlla Premium
     try {
       var snap = await getDoc(doc(db, 'users', user.uid));
       if (snap.exists()) {
-        var nome = snap.data().nome || user.email;
+        var ud = snap.data();
+        var nome = ud.nome || user.email;
         var nomeEl = document.getElementById('nome-utente');
         if (nomeEl) nomeEl.textContent = nome.split(' ')[0];
+
+        // Controlla Premium e scadenza
+        var prem    = ud.premium === true;
+        var scad    = ud.premiumScadenza || null;
+        var scaduta = scad && new Date(scad) < new Date();
+        isPremium   = prem && !scaduta;
+
+        // Mostra banner Premium
+        var banner = document.getElementById('premium-banner');
+        if (banner) {
+          banner.style.display = 'block';
+          if (isPremium) {
+            var scadStr = scad ? new Date(scad).toLocaleDateString('it-IT') : '—';
+            banner.innerHTML =
+              '<div class="premium-banner">' +
+                '<div class="premium-icon">⭐</div>' +
+                '<div>' +
+                  '<div class="premium-title">Piano Premium attivo</div>' +
+                  '<div class="premium-sub">Accesso completo a tutte le funzionalità avanzate</div>' +
+                  '<div class="premium-scad">Scadenza: ' + scadStr + '</div>' +
+                '</div>' +
+              '</div>';
+          } else if (prem && scaduta) {
+            banner.innerHTML =
+              '<div class="free-banner">' +
+                '<div class="free-icon">⚠️</div>' +
+                '<div>' +
+                  '<div class="free-title">Premium scaduto</div>' +
+                  '<div class="free-sub">Rinnova il tuo abbonamento per riattivare le funzionalità avanzate.</div>' +
+                '</div>' +
+              '</div>';
+          } else {
+            banner.innerHTML =
+              '<div class="free-banner">' +
+                '<div class="free-icon">🔓</div>' +
+                '<div>' +
+                  '<div class="free-title">Piano gratuito</div>' +
+                  '<div class="free-sub">Contatta TiRoVA per attivare le funzionalità Premium.</div>' +
+                '</div>' +
+              '</div>';
+          }
+        }
       }
     } catch(e) {}
 
     caricaTag();
+    caricaScansioni();
   });
 
   async function caricaTag() {
@@ -394,6 +486,79 @@
     }).catch(function() {
       showAlert('Copia manuale: ' + url, 'ok');
     });
+  }
+
+  async function caricaScansioni() {
+    var scanEl = document.getElementById('scan-list');
+    if (!scanEl) return;
+
+    if (!isPremium) {
+      scanEl.innerHTML =
+        '<div class="premium-lock">' +
+          '<div class="premium-lock-icon">🔒</div>' +
+          '<div class="premium-lock-title">Funzionalità Premium</div>' +
+          '<div class="premium-lock-desc">Lo storico delle scansioni è disponibile solo con il piano Premium. Contatta TiRoVA per attivarlo.</div>' +
+        '</div>';
+      return;
+    }
+
+    scanEl.innerHTML = '<div class="loading-wrap"><div class="spinner"></div></div>';
+
+    try {
+      // Carica tag dell'utente
+      var qTag  = query(collection(db, 'tags'), where('proprietario', '==', currentUser.uid));
+      var snTag = await getDocs(qTag);
+      var tagIds = [];
+      snTag.forEach(function(d) { tagIds.push(d.id); });
+
+      if (tagIds.length === 0) {
+        scanEl.innerHTML = '<div class="empty-state"><div class="empty-desc">Nessuna scansione registrata.</div></div>';
+        return;
+      }
+
+      // Carica scansioni per ogni tag
+      var tutteLeScan = [];
+      for (var i = 0; i < tagIds.length; i++) {
+        var tid = tagIds[i];
+        var snScan = await getDocs(collection(db, 'scansioni', tid, 'lista'));
+        snScan.forEach(function(s) {
+          tutteLeScan.push({ ...s.data(), _tagId: tid, _scanId: s.id });
+        });
+      }
+
+      if (tutteLeScan.length === 0) {
+        scanEl.innerHTML = '<div class="empty-state"><div class="empty-desc">Nessuna scansione registrata ancora. La lista si aggiornerà automaticamente ad ogni scansione.</div></div>';
+        return;
+      }
+
+      // Ordina per data decrescente
+      tutteLeScan.sort(function(a, b) {
+        return new Date(b.timestamp) - new Date(a.timestamp);
+      });
+
+      scanEl.innerHTML = '';
+      tutteLeScan.slice(0, 50).forEach(function(s) {
+        var data = new Date(s.timestamp);
+        var dataStr = data.toLocaleDateString('it-IT') + ' ' + data.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+        var device = (s.userAgent || '').includes('iPhone') ? '📱 iPhone' :
+                     (s.userAgent || '').includes('Android') ? '📱 Android' : '💻 Desktop';
+
+        var div = document.createElement('div');
+        div.className = 'scan-item';
+        div.innerHTML =
+          '<div class="scan-icon">📍</div>' +
+          '<div class="scan-body">' +
+            '<div class="scan-time">' + dataStr + '</div>' +
+            '<div class="scan-tag">Tag: <strong>#' + s._tagId + '</strong></div>' +
+            (s.mapsUrl ? '<a class="scan-pos" href="' + s.mapsUrl + '" target="_blank">📍 Vedi posizione su Maps</a>' : '<div class="scan-device" style="margin-top:4px;">Posizione GPS non disponibile</div>') +
+            '<div class="scan-device">' + device + '</div>' +
+          '</div>';
+        scanEl.appendChild(div);
+      });
+
+    } catch(e) {
+      scanEl.innerHTML = '<div class="empty-state"><div class="empty-desc" style="color:var(--red);">Errore: ' + e.message + '</div></div>';
+    }
   }
 
   function showAlert(msg, tipo) {

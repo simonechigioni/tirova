@@ -311,12 +311,15 @@
       <div class="form-title">Crea nuovo tag</div>
       <div class="field-row">
         <div class="field">
-          <label>ID tag <span style="color:var(--red)">*</span></label>
-          <input id="new-tagid" type="text" placeholder="es. TAG001" maxlength="20"/>
+          <label>ID tag <span style="color:var(--red)">*</span> <span style="color:var(--muted);font-weight:400;font-size:11px;">— generato automaticamente</span></label>
+          <div style="display:flex;gap:8px;">
+            <input id="new-tagid" type="text" placeholder="es. TRV-A3F9K2" maxlength="20" style="flex:1;"/>
+            <button onclick="generaIdTag()" style="padding:0 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;color:var(--ink-soft);">🔄 Genera</button>
+          </div>
         </div>
         <div class="field">
           <label>Tipo <span style="color:var(--red)">*</span></label>
-          <select id="new-tipo">
+          <select id="new-tipo" onchange="aggiornaCampiTipo()">
             <option value="bambino">👶 Bambino</option>
             <option value="animale">🐾 Animale</option>
             <option value="caregiver">🧓 Caregiver</option>
@@ -337,7 +340,12 @@
       </div>
       <div class="field">
         <label>Note / Descrizione</label>
-        <input id="new-desc" type="text" placeholder="es. Figlia di Simone, 5 anni"/>
+        <input id="new-desc" type="text" placeholder="es. Figlia di Simone, 5 anni, capelli castani"/>
+      </div>
+      <!-- Indicazioni mediche (nascoste per oggetto) -->
+      <div class="field" id="campo-medico">
+        <label>⚕️ Indicazioni mediche <span style="color:var(--muted);font-weight:400;">(opzionale)</span></label>
+        <textarea id="new-medico" placeholder="es. Allergia alle arachidi, asma, diabete tipo 1, farmaci in uso..." style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:14px;background:var(--bg);color:var(--ink);resize:vertical;min-height:80px;outline:none;"></textarea>
       </div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">
         Il tag verrà creato come <strong>non registrato</strong> — il cliente lo configurerà scansionando il tag NFC.
@@ -354,8 +362,28 @@
     </div>
     <div id="tag-list"><div class="spinner"></div></div>
 
+    <!-- Gestione utenti Premium -->
+    <div class="section-title" style="margin-top:32px;">⭐ Gestione Premium utenti</div>
+    <div id="utenti-list"><div class="spinner"></div></div>
+
   </div>
 
+</div>
+
+<!-- Modal Premium -->
+<div class="modal-overlay" id="modal-premium">
+  <div class="modal">
+    <div class="modal-title" id="modal-prem-title">Gestione Premium</div>
+    <div class="modal-desc" id="modal-prem-desc"></div>
+    <div class="field" style="margin-bottom:16px;">
+      <label>Data scadenza Premium</label>
+      <input id="modal-prem-data" type="date" style="width:100%;padding:11px 13px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:15px;font-family:inherit;outline:none;"/>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-mc" onclick="chiudiModalPremium()">Annulla</button>
+      <button class="btn-md" style="background:#F57F17;" onclick="confermaPremium()">✓ Salva</button>
+    </div>
+  </div>
 </div>
 
 <!-- Modal elimina -->
@@ -374,7 +402,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, query, orderBy }
+  import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, getDoc }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -416,6 +444,7 @@
       document.getElementById('view-login').style.display = 'none';
       document.getElementById('view-admin').style.display = 'block';
       caricaTutti();
+      caricaUtenti();
     }
   });
 
@@ -501,7 +530,7 @@
       div.className = 'tag-row';
       div.innerHTML =
         '<div class="tag-row-top">' +
-          '<div class="tag-icon-sm">' + icon + '</div>' +
+          (t.foto ? '<img src="' + t.foto + '" style="width:52px;height:52px;border-radius:12px;object-fit:cover;flex-shrink:0;border:1px solid var(--border);"/>' : '<div class="tag-icon-sm">' + icon + '</div>') +
           '<div class="tag-row-info">' +
             '<div class="tag-row-nome">' + (t.nome || 'Senza nome') + '</div>' +
             '<div class="tag-row-meta">' +
@@ -513,6 +542,7 @@
           '</div>' +
         '</div>' +
         (t.identificativo ? '<div style="font-size:13px;color:var(--ink-soft);margin-bottom:6px;">' + t.identificativo + '</div>' : '') +
+        (t.indicazioniMediche ? '<div style="font-size:12px;background:#FFF8E1;border:1px solid #FFE082;border-radius:8px;padding:8px 10px;margin-bottom:8px;color:#5D4037;">⚕️ ' + t.indicazioniMediche + '</div>' : '') +
         '<div class="tag-row-contatti">' + (contStr || '<em style="color:var(--muted)">Nessun contatto</em>') + '</div>' +
         '<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:10px;margin-bottom:4px;">📲 URL da programmare sul tag NFC</div>' +
         '<div class="tag-row-url">' + tagUrl + '</div>' +
@@ -541,9 +571,34 @@
     renderTag(res);
   }
 
+  window.generaIdTag       = generaIdTag;
+  window.aggiornaCampiTipo = aggiornaCampiTipo;
+
+  // Genera ID univoco non sequenziale: TRV-XXXXXX
+  function generaIdTag() {
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    var id = 'TRV-';
+    for (var i = 0; i < 6; i++) {
+      id += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    document.getElementById('new-tagid').value = id;
+  }
+
+  function aggiornaCampiTipo() {
+    var tipo = document.getElementById('new-tipo').value;
+    var campoMedico = document.getElementById('campo-medico');
+    // Nascondi campo medico per oggetti
+    if (campoMedico) campoMedico.style.display = tipo === 'oggetto' ? 'none' : 'block';
+  }
+
+  // Genera ID automatico all'apertura form
   function toggleNuovoTag() {
     var form = document.getElementById('form-nuovo-tag');
     form.classList.toggle('show');
+    if (form.classList.contains('show')) {
+      generaIdTag();
+      aggiornaCampiTipo();
+    }
   }
 
   async function creaNuovoTag() {
@@ -552,6 +607,7 @@
     var nome    = document.getElementById('new-nome').value.trim();
     var autoSec = parseInt(document.getElementById('new-autosec').value) || 5;
     var desc    = document.getElementById('new-desc').value.trim();
+    var medico  = tipo !== 'oggetto' ? (document.getElementById('new-medico').value.trim()) : '';
 
     if (!id || !nome) { showAlertAdmin('Compila ID tag e nome.', 'err'); return; }
 
@@ -560,16 +616,18 @@
         tipo:             tipo,
         nome:             nome,
         identificativo:   desc,
+        indicazioniMediche: medico,
         autoSec:          autoSec,
         contatti:         [],
+        foto:             '',
         registrato:       false,
         dataCreazione:    new Date().toISOString()
       });
       showAlertAdmin('✓ Tag "' + id + '" creato. URL: ' + BASE_URL + id, 'ok');
       toggleNuovoTag();
-      // Reset campi
-      ['new-tagid','new-nome','new-desc'].forEach(function(f) {
-        document.getElementById(f).value = '';
+      ['new-tagid','new-nome','new-desc','new-medico'].forEach(function(f) {
+        var el = document.getElementById(f);
+        if (el) el.value = '';
       });
       document.getElementById('new-autosec').value = '5';
       caricaTutti();
@@ -610,7 +668,104 @@
     }
   }
 
-  function showAlertAdmin(msg, tipo) {
+  window.gestisciPremium     = gestisciPremium;
+  window.chiudiModalPremium  = chiudiModalPremium;
+  window.confermaPremium     = confermaPremium;
+  window.revocaPremium       = revocaPremium;
+
+  var utenteSelezionato = null;
+
+  async function caricaUtenti() {
+    var listEl = document.getElementById('utenti-list');
+    try {
+      var snap = await getDocs(collection(db, 'users'));
+      if (snap.empty) {
+        listEl.innerHTML = '<div class="empty-state"><div class="empty-desc">Nessun utente registrato.</div></div>';
+        return;
+      }
+      listEl.innerHTML = '';
+      snap.forEach(function(d) {
+        var ud      = d.data();
+        var prem    = ud.premium === true;
+        var scad    = ud.premiumScadenza || null;
+        var scaduta = scad && new Date(scad) < new Date();
+        var attivo  = prem && !scaduta;
+        var scadStr = scad ? new Date(scad).toLocaleDateString('it-IT') : '—';
+
+        var div = document.createElement('div');
+        div.style.cssText = 'background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;';
+        div.innerHTML =
+          '<div style="flex:1;">' +
+            '<div style="font-size:14px;font-weight:700;">' + (ud.nome || '—') + '</div>' +
+            '<div style="font-size:12px;color:#888;">' + (ud.email || d.id) + '</div>' +
+            '<div style="margin-top:4px;">' +
+              (attivo
+                ? '<span style="background:#FFF8E1;color:#F57F17;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;">⭐ Premium — scade ' + scadStr + '</span>'
+                : scaduta
+                  ? '<span style="background:#FFEBEE;color:#D32F2F;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;">⚠️ Premium scaduto</span>'
+                  : '<span style="background:#F5F5F5;color:#888;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;">Piano gratuito</span>'
+              ) +
+            '</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:6px;">' +
+            '<button onclick="gestisciPremium(\'' + d.id + '\',\'' + (ud.nome||'') + '\',\'' + (scad||'') + '\')" style="padding:7px 12px;border-radius:8px;border:none;background:#FFF8E1;color:#F57F17;font-size:12px;font-weight:700;cursor:pointer;">⭐ Premium</button>' +
+            (prem ? '<button onclick="revocaPremium(\'' + d.id + '\')" style="padding:7px 12px;border-radius:8px;border:none;background:#FFEBEE;color:#D32F2F;font-size:12px;font-weight:700;cursor:pointer;">✕ Revoca</button>' : '') +
+          '</div>';
+        listEl.appendChild(div);
+      });
+    } catch(e) {
+      listEl.innerHTML = '<div class="empty-state"><div class="empty-desc" style="color:red;">Errore: ' + e.message + '</div></div>';
+    }
+  }
+
+  function gestisciPremium(uid, nome, scadAttuale) {
+    utenteSelezionato = uid;
+    document.getElementById('modal-prem-title').textContent = 'Premium — ' + (nome || uid);
+    document.getElementById('modal-prem-desc').textContent  = 'Imposta la data di scadenza del piano Premium per questo utente.';
+    // Precompila data odierna + 1 anno se non c'è scadenza
+    var dataInput = document.getElementById('modal-prem-data');
+    if (scadAttuale) {
+      dataInput.value = scadAttuale.substring(0, 10);
+    } else {
+      var tra1anno = new Date();
+      tra1anno.setFullYear(tra1anno.getFullYear() + 1);
+      dataInput.value = tra1anno.toISOString().substring(0, 10);
+    }
+    document.getElementById('modal-premium').classList.add('show');
+  }
+
+  function chiudiModalPremium() {
+    utenteSelezionato = null;
+    document.getElementById('modal-premium').classList.remove('show');
+  }
+
+  async function confermaPremium() {
+    if (!utenteSelezionato) return;
+    var data = document.getElementById('modal-prem-data').value;
+    if (!data) { alert('Seleziona una data di scadenza.'); return; }
+    try {
+      await setDoc(doc(db, 'users', utenteSelezionato), {
+        premium:           true,
+        premiumScadenza:   data + 'T23:59:59.000Z'
+      }, { merge: true });
+      chiudiModalPremium();
+      showAlertAdmin('✓ Premium attivato fino al ' + new Date(data).toLocaleDateString('it-IT'), 'ok');
+      caricaUtenti();
+    } catch(e) {
+      showAlertAdmin('Errore: ' + e.message, 'err');
+    }
+  }
+
+  async function revocaPremium(uid) {
+    if (!confirm('Revocare il Premium per questo utente?')) return;
+    try {
+      await setDoc(doc(db, 'users', uid), { premium: false, premiumScadenza: null }, { merge: true });
+      showAlertAdmin('Premium revocato.', 'ok');
+      caricaUtenti();
+    } catch(e) {
+      showAlertAdmin('Errore: ' + e.message, 'err');
+    }
+  }
     var el = document.getElementById('alert-admin');
     el.textContent = msg; el.className = 'alert ' + tipo;
     setTimeout(function() { el.className = 'alert'; }, 5000);
