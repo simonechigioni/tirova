@@ -54,6 +54,14 @@
 
     .main { width: 100%; max-width: 700px; padding: 28px 16px 60px; }
 
+    /* Alert */
+    .alert { padding: 12px 16px; border-radius: 10px;
+      font-size: 13px; font-weight: 600; margin-bottom: 16px; display: none; }
+    .alert.err { background: #FFEBEE; border: 1px solid #FFCDD2;
+      color: var(--red); display: block; }
+    .alert.ok  { background: #E8F5E9; border: 1px solid #A5D6A7;
+      color: var(--green); display: block; }
+
     /* Login admin */
     #view-login {
       display: flex; flex-direction: column; align-items: center;
@@ -258,14 +266,15 @@
       <div class="alert" id="alert-login"></div>
       <div class="field">
         <label>Email admin</label>
-        <input id="admin-email" type="email" placeholder="admin@tirova.it"/>
+        <input id="admin-email" type="email" placeholder="simone.chigioni@gmail.com" autocomplete="email"/>
       </div>
       <div class="field" style="margin-bottom:0">
         <label>Password</label>
-        <input id="admin-pass" type="password" placeholder="••••••••"/>
+        <input id="admin-pass" type="password" placeholder="••••••••" autocomplete="current-password"/>
       </div>
-      <button class="btn-salva-tag" style="margin-top:20px;width:100%;" onclick="doLoginAdmin()">
-        Accedi al pannello
+      <button class="btn-salva-tag" id="btn-login-admin" style="margin-top:20px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <span class="spinner-sm" id="spin-login" style="display:none;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;"></span>
+        <span id="lbl-login-btn">Accedi al pannello</span>
       </button>
     </div>
   </div>
@@ -440,6 +449,15 @@
   window.chiudiModal    = chiudiModal;
   window.confermaElimina = confermaElimina;
 
+  // Collega bottone login e tasto Enter via JS (non inline per compatibilità con type="module")
+  document.getElementById('btn-login-admin').addEventListener('click', doLoginAdmin);
+  document.getElementById('admin-pass').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doLoginAdmin();
+  });
+  document.getElementById('admin-email').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doLoginAdmin();
+  });
+
   onAuthStateChanged(auth, async function(user) {
     if (user) {
       if (user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
@@ -458,17 +476,32 @@
   async function doLoginAdmin() {
     var email = document.getElementById('admin-email').value.trim().toLowerCase();
     var pass  = document.getElementById('admin-pass').value.trim();
+    var btn   = document.getElementById('btn-login-admin');
+
     if (!email || !pass) { showAlertLogin('Compila email e password.'); return; }
-    if (email !== ADMIN_EMAIL.toLowerCase()) { showAlertLogin('Accesso non autorizzato.'); return; }
+    if (email !== ADMIN_EMAIL.toLowerCase()) { showAlertLogin('Accesso non autorizzato per questa email.'); return; }
+
+    // Loading
+    var spin = document.getElementById('spin-login');
+    var lbl  = document.getElementById('lbl-login-btn');
+    if (btn)  btn.disabled = true;
+    if (spin) spin.style.display = 'block';
+    if (lbl)  lbl.textContent = 'Accesso in corso...';
+
     try {
       await signInWithEmailAndPassword(auth, email, pass);
+      // onAuthStateChanged gestisce il redirect
     } catch(e) {
       var map = {
         'auth/wrong-password':     'Password errata.',
-        'auth/invalid-credential': 'Credenziali non valide.',
-        'auth/user-not-found':     'Utente non trovato.'
+        'auth/invalid-credential': 'Email o password non corretti.',
+        'auth/user-not-found':     'Utente non trovato.',
+        'auth/too-many-requests':  'Troppi tentativi. Riprova tra qualche minuto.'
       };
       showAlertLogin(map[e.code] || 'Errore: ' + e.code);
+      if (btn)  btn.disabled = false;
+      if (spin) spin.style.display = 'none';
+      if (lbl)  lbl.textContent = 'Accedi al pannello';
     }
   }
 
