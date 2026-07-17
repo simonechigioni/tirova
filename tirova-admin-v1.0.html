@@ -329,7 +329,7 @@
         </div>
         <div class="field">
           <label>Tipo <span style="color:var(--red)">*</span></label>
-          <select id="new-tipo" onchange="aggiornaCampiTipo()">
+          <select id="new-tipo">
             <option value="bambino">👶 Bambino</option>
             <option value="animale">🐾 Animale</option>
             <option value="caregiver">🧓 Caregiver</option>
@@ -338,27 +338,8 @@
           </select>
         </div>
       </div>
-      <div class="field-row">
-        <div class="field">
-          <label>Nome <span style="color:var(--red)">*</span></label>
-          <input id="new-nome" type="text" placeholder="es. Cecilia"/>
-        </div>
-        <div class="field">
-          <label>WhatsApp auto (sec)</label>
-          <input id="new-autosec" type="number" value="5" min="0" max="30"/>
-        </div>
-      </div>
-      <div class="field">
-        <label>Note / Descrizione</label>
-        <input id="new-desc" type="text" placeholder="es. Figlia di Simone, 5 anni, capelli castani"/>
-      </div>
-      <!-- Indicazioni mediche (nascoste per oggetto) -->
-      <div class="field" id="campo-medico">
-        <label>⚕️ Indicazioni mediche <span style="color:var(--muted);font-weight:400;">(opzionale)</span></label>
-        <textarea id="new-medico" placeholder="es. Allergia alle arachidi, asma, diabete tipo 1, farmaci in uso..." style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:14px;background:var(--bg);color:var(--ink);resize:vertical;min-height:80px;outline:none;"></textarea>
-      </div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">
-        Il tag verrà creato come <strong>non registrato</strong> — il cliente lo configurerà scansionando il tag NFC.
+        Il tag verrà creato come <strong>non registrato</strong> — il cliente inserirà tutti i dettagli scansionando il tag NFC.
       </div>
       <div class="form-btns">
         <button class="btn-annulla-form" onclick="toggleNuovoTag()">Annulla</button>
@@ -624,13 +605,6 @@
     document.getElementById('new-tagid').value = id;
   }
 
-  function aggiornaCampiTipo() {
-    var tipo = document.getElementById('new-tipo').value;
-    var campoMedico = document.getElementById('campo-medico');
-    // Nascondi campo medico per oggetti
-    if (campoMedico) campoMedico.style.display = tipo === 'oggetto' ? 'none' : 'block';
-  }
-
   // Genera ID automatico all'apertura form
   function toggleNuovoTag() {
     var form = document.getElementById('form-nuovo-tag');
@@ -642,34 +616,21 @@
   }
 
   async function creaNuovoTag() {
-    var id      = document.getElementById('new-tagid').value.trim().replace(/\s/g,'').toUpperCase();
-    var tipo    = document.getElementById('new-tipo').value;
-    var nome    = document.getElementById('new-nome').value.trim();
-    var autoSec = parseInt(document.getElementById('new-autosec').value) || 5;
-    var desc    = document.getElementById('new-desc').value.trim();
-    var medico  = tipo !== 'oggetto' ? (document.getElementById('new-medico').value.trim()) : '';
+    var id   = document.getElementById('new-tagid').value.trim().replace(/\s/g,'').toUpperCase();
+    var tipo = document.getElementById('new-tipo').value;
 
-    if (!id || !nome) { showAlertAdmin('Compila ID tag e nome.', 'err'); return; }
+    if (!id) { showAlertAdmin('Genera o inserisci un ID tag.', 'err'); return; }
 
     try {
       await setDoc(doc(db, 'tags', id), {
-        tipo:             tipo,
-        nome:             nome,
-        identificativo:   desc,
-        indicazioniMediche: medico,
-        autoSec:          autoSec,
-        contatti:         [],
-        foto:             '',
-        registrato:       false,
-        dataCreazione:    new Date().toISOString()
+        tipo:          tipo,
+        contatti:      [],
+        registrato:    false,
+        dataCreazione: new Date().toISOString()
       });
-      showAlertAdmin('✓ Tag "' + id + '" creato. URL: ' + BASE_URL + id, 'ok');
+      showAlertAdmin('✓ Tag "' + id + '" creato — URL: ' + BASE_URL + id, 'ok');
       toggleNuovoTag();
-      ['new-tagid','new-nome','new-desc','new-medico'].forEach(function(f) {
-        var el = document.getElementById(f);
-        if (el) el.value = '';
-      });
-      document.getElementById('new-autosec').value = '5';
+      document.getElementById('new-tagid').value = '';
       caricaTutti();
     } catch(e) {
       showAlertAdmin('Errore: ' + e.message, 'err');
