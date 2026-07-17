@@ -213,64 +213,32 @@
 
 <div class="main">
 
-  <!-- PROGRESS -->
+  <!-- PROGRESS — solo 2 step per il cliente -->
   <div class="steps" id="steps-bar">
     <div class="step active" id="step1">
       <div class="step-circle">1</div>
-      <div class="step-label">Tipo</div>
+      <div class="step-label">Dettagli</div>
     </div>
     <div class="step-line" id="line1"></div>
     <div class="step" id="step2">
       <div class="step-circle">2</div>
-      <div class="step-label">Dettagli</div>
-    </div>
-    <div class="step-line" id="line2"></div>
-    <div class="step" id="step3">
-      <div class="step-circle">3</div>
       <div class="step-label">Contatti</div>
+    </div>
+  </div>
+
+  <!-- Badge tipo (impostato dall'admin) -->
+  <div id="tipo-badge" style="display:none;width:100%;background:#FFF8E1;border:1px solid #FFE082;border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+    <span id="tipo-badge-icon" style="font-size:28px;"></span>
+    <div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#888;">Tipo tag</div>
+      <div id="tipo-badge-label" style="font-size:15px;font-weight:800;color:#1A1A1A;"></div>
     </div>
   </div>
 
   <div class="alert" id="alert-main"></div>
 
-  <!-- STEP 1 — Tipo -->
+  <!-- STEP 1 — Dettagli (ex step 2) -->
   <div class="card" id="panel-step1">
-    <div class="card-title">Che cosa vuoi proteggere?</div>
-    <div class="card-desc">Scegli il tipo di tag. La pagina SOS verrà personalizzata in base alla tua scelta.</div>
-    <div class="tipo-grid">
-      <div class="tipo-btn" id="tipo-bambino" onclick="selezionaTipo('bambino')">
-        <div class="tipo-icon">👶</div>
-        <div class="tipo-nome">Bambino/a</div>
-        <div class="tipo-desc-small">Per bambini che potrebbero perdersi</div>
-      </div>
-      <div class="tipo-btn" id="tipo-animale" onclick="selezionaTipo('animale')">
-        <div class="tipo-icon">🐾</div>
-        <div class="tipo-nome">Animale</div>
-        <div class="tipo-desc-small">Per cani, gatti e altri animali</div>
-      </div>
-      <div class="tipo-btn" id="tipo-caregiver" onclick="selezionaTipo('caregiver')">
-        <div class="tipo-icon">🧓</div>
-        <div class="tipo-nome">Persona assistita</div>
-        <div class="tipo-desc-small">Per anziani o persone con disabilità</div>
-      </div>
-      <div class="tipo-btn" id="tipo-oggetto" onclick="selezionaTipo('oggetto')">
-        <div class="tipo-icon">🎒</div>
-        <div class="tipo-nome">Oggetto</div>
-        <div class="tipo-desc-small">Zaini, chiavi, valigie e altro</div>
-      </div>
-      <div class="tipo-btn" id="tipo-sos" onclick="selezionaTipo('sos')" style="grid-column:span 2;">
-        <div class="tipo-icon">🆘</div>
-        <div class="tipo-nome">Contatto SOS generico</div>
-        <div class="tipo-desc-small">Pagina di emergenza con i tuoi contatti</div>
-      </div>
-    </div>
-    <div class="nav-btns" style="margin-top:20px;">
-      <button class="btn-next" id="btn-next1" onclick="vaiStep(2)" disabled>Avanti →</button>
-    </div>
-  </div>
-
-  <!-- STEP 2 — Dettagli -->
-  <div class="card hidden" id="panel-step2">
     <div class="card-title" id="step2-title">Dettagli</div>
     <div class="card-desc"  id="step2-desc">Inserisci le informazioni che appariranno sulla pagina SOS.</div>
 
@@ -282,19 +250,32 @@
       <label>Descrizione <span style="color:var(--muted);font-weight:400;">(opzionale)</span></label>
       <textarea id="inp-desc" placeholder="es. Figlia di Simone e Isabella, 5 anni, capelli castani"></textarea>
     </div>
+    <!-- Indicazioni mediche (nascoste per oggetto) -->
+    <div class="field" id="campo-medico-cfg">
+      <label>⚕️ Indicazioni mediche <span style="color:var(--muted);font-weight:400;">(opzionale)</span></label>
+      <textarea id="inp-medico" placeholder="es. Allergia alle arachidi, asma, diabete tipo 1, farmaci in uso..."></textarea>
+    </div>
+    <!-- Foto (nascosta per oggetto) -->
+    <div class="field" id="campo-foto-cfg">
+      <label>📷 Foto <span style="color:var(--muted);font-weight:400;">(opzionale)</span></label>
+      <input id="inp-foto" type="file" accept="image/*" style="padding:10px;font-size:13px;" onchange="anteprima(this)"/>
+      <div id="foto-preview" style="display:none;margin-top:10px;">
+        <img id="foto-img" src="" style="width:100px;height:100px;object-fit:cover;border-radius:12px;border:1px solid var(--border);"/>
+        <button onclick="rimuoviFoto()" style="display:block;margin-top:6px;background:none;border:none;color:var(--red);font-size:12px;cursor:pointer;">✕ Rimuovi foto</button>
+      </div>
+    </div>
     <div class="field">
       <label>Secondi prima di aprire WhatsApp automaticamente <span style="color:var(--muted);font-weight:400;">(0 = mai)</span></label>
       <input id="inp-autosec" type="number" value="5" min="0" max="30"/>
     </div>
 
     <div class="nav-btns">
-      <button class="btn-back" onclick="vaiStep(1)">← Indietro</button>
-      <button class="btn-next" onclick="vaiStep(3)">Avanti →</button>
+      <button class="btn-next" onclick="vaiStep(2)">Avanti →</button>
     </div>
   </div>
 
-  <!-- STEP 3 — Contatti -->
-  <div class="card hidden" id="panel-step3">
+  <!-- STEP 2 — Contatti (ex step 3) -->
+  <div class="card hidden" id="panel-step2">
     <div class="card-title">Chi contattare?</div>
     <div class="card-desc">Aggiungi le persone da contattare in caso di emergenza.</div>
 
@@ -308,7 +289,7 @@
     <div id="contatti-container"></div>
 
     <div class="nav-btns" style="margin-top:20px;">
-      <button class="btn-back" onclick="vaiStep(2)">← Indietro</button>
+      <button class="btn-back" onclick="vaiStep(1)">← Indietro</button>
       <button class="btn-next" id="btn-salva" onclick="salvaTag()">
         <span class="spinner-sm" id="spin-salva"></span>
         <span id="lbl-salva">✓ Salva e attiva</span>
@@ -334,7 +315,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc }
+  import { getFirestore, doc, setDoc, getDoc }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -350,28 +331,19 @@
   const auth = getAuth(app);
   const db   = getFirestore(app);
 
-  const params = new URLSearchParams(window.location.search);
   var tagId = window.location.hash.replace('#','').trim();
   if (!tagId) { const p = new URLSearchParams(window.location.search); tagId = p.get('id'); }
-  var currentUser = null;
-
-  // Controlla autenticazione
-  onAuthStateChanged(auth, function(user) {
-    if (!user) {
-      window.location.href = 'tirova-auth-v1.0.html' + (tagId ? '?id=' + tagId : '');
-      return;
-    }
-    currentUser = user;
-    var emailEl = document.getElementById('header-email');
-    if (emailEl) emailEl.textContent = user.email;
-  });
-
-  // Stato
+  var currentUser    = null;
   var tipoSelezionato = null;
-  var numContatti = 1;
-  var stepCorrente = 1;
+  var numContatti    = 1;
+  var stepCorrente   = 1;
 
-  // Configurazioni tipo
+  var tipoIcon2 = { bambino:'👶', animale:'🐾', caregiver:'🧓', oggetto:'🎒', sos:'🆘' };
+  var tipoLabel2 = {
+    bambino:'Bambino/a', animale:'Animale',
+    caregiver:'Persona assistita', oggetto:'Oggetto', sos:'SOS generico'
+  };
+
   var tipoLabels = {
     bambino:   { nomeLabel: 'Nome del bambino/a', desc: 'Inserisci il nome e una breve descrizione che aiuti il ritrovamento.' },
     animale:   { nomeLabel: 'Nome dell\'animale',  desc: 'Inserisci il nome e il tipo di animale.' },
@@ -380,80 +352,120 @@
     sos:       { nomeLabel: 'Il tuo nome',          desc: 'Inserisci il tuo nome e informazioni utili.' }
   };
 
+  // Controlla autenticazione e carica tipo dal DB
+  onAuthStateChanged(auth, async function(user) {
+    if (!user) {
+      window.location.href = 'tirova-auth-v1.0.html#' + (tagId || '');
+      return;
+    }
+    currentUser = user;
+    var emailEl = document.getElementById('header-email');
+    if (emailEl) emailEl.textContent = user.email;
+
+    // Leggi tipo tag dal database
+    if (tagId) {
+      try {
+        var snap = await getDoc(doc(db, 'tags', tagId));
+        if (snap.exists()) {
+          tipoSelezionato = snap.data().tipo || 'sos';
+        } else {
+          tipoSelezionato = 'sos';
+        }
+      } catch(e) {
+        tipoSelezionato = 'sos';
+      }
+    }
+
+    // Mostra badge tipo
+    var badge = document.getElementById('tipo-badge');
+    var icon  = document.getElementById('tipo-badge-icon');
+    var label = document.getElementById('tipo-badge-label');
+    if (badge) badge.style.display = 'flex';
+    if (icon)  icon.textContent  = tipoIcon2[tipoSelezionato] || '🏷️';
+    if (label) label.textContent = tipoLabel2[tipoSelezionato] || tipoSelezionato;
+
+    // Configura step 1 con labels corretti per tipo
+    var cfg  = tipoLabels[tipoSelezionato] || tipoLabels.sos;
+    var t    = document.getElementById('step2-title');
+    var d    = document.getElementById('step2-desc');
+    var l    = document.getElementById('label-nome');
+    if (t) t.textContent = 'Dettagli';
+    if (d) d.textContent = cfg.desc;
+    if (l) l.innerHTML   = cfg.nomeLabel + ' <span style="color:var(--red)">*</span>';
+
+    // Nascondi campi medico e foto per oggetto
+    var isOggetto = tipoSelezionato === 'oggetto';
+    var cm = document.getElementById('campo-medico-cfg');
+    var cf = document.getElementById('campo-foto-cfg');
+    if (cm) cm.style.display = isOggetto ? 'none' : 'block';
+    if (cf) cf.style.display = isOggetto ? 'none' : 'block';
+
+    renderContattiForm();
+  });
+
   var ruoliOptions = [
     'mamma','papà','marito','moglie','compagno','compagna',
     'nonno','nonna','zio','zia','fratello','sorella',
     'tutore','proprietario','altro'
   ];
 
-  // Rendi funzioni globali
-  window.selezionaTipo  = selezionaTipo;
+  window.anteprima   = anteprima;
+  window.rimuoviFoto = rimuoviFoto;
+  window.toggleAltro = toggleAltro;
   window.vaiStep        = vaiStep;
   window.setNumContatti = setNumContatti;
   window.salvaTag       = salvaTag;
   window.doLogout       = doLogout;
 
-  function selezionaTipo(tipo) {
-    tipoSelezionato = tipo;
-    document.querySelectorAll('.tipo-btn').forEach(function(b) { b.classList.remove('selected'); });
-    var btn = document.getElementById('tipo-' + tipo);
-    if (btn) btn.classList.add('selected');
-    var next = document.getElementById('btn-next1');
-    if (next) next.disabled = false;
-  }
+  var fotoBase64 = '';
 
   function vaiStep(n) {
-    // Validazione
-    if (n === 2 && !tipoSelezionato) {
-      showAlert('Seleziona un tipo di tag.', 'err'); return;
-    }
-    if (n === 3) {
+    if (n === 2) {
       var nome = val('inp-nome');
       if (!nome) { showAlert('Inserisci il nome.', 'err'); return; }
     }
 
     stepCorrente = n;
-    hideAll();
     showAlert('', '');
 
-    // Aggiorna progress
-    [1,2,3].forEach(function(i) {
+    // Aggiorna progress bar (2 step)
+    [1,2].forEach(function(i) {
       var s = document.getElementById('step' + i);
       if (!s) return;
       s.classList.toggle('active', i === n);
       s.classList.toggle('done',   i < n);
-      if (i < 3) {
-        var l = document.getElementById('line' + i);
-        if (l) l.classList.toggle('done', i < n);
-      }
     });
-
-    // Aggiorna step 2 con labels per tipo
-    if (n === 2 && tipoSelezionato) {
-      var cfg = tipoLabels[tipoSelezionato];
-      var t = document.getElementById('step2-title');
-      var d = document.getElementById('step2-desc');
-      var l = document.getElementById('label-nome');
-      if (t) t.textContent = 'Dettagli';
-      if (d) d.textContent = cfg.desc;
-      if (l) l.innerHTML   = cfg.nomeLabel + ' <span style="color:var(--red)">*</span>';
-    }
+    var l1 = document.getElementById('line1');
+    if (l1) l1.classList.toggle('done', n > 1);
 
     // Mostra panel corretto
-    var panel = document.getElementById('panel-step' + n);
-    if (panel) panel.classList.remove('hidden');
+    document.getElementById('panel-step1').classList.toggle('hidden', n !== 1);
+    var p2 = document.getElementById('panel-step2');
+    if (p2) p2.classList.toggle('hidden', n !== 2);
 
-    // Step 3 → render contatti
-    if (n === 3) renderContattiForm();
-
+    if (n === 2) renderContattiForm();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  function hideAll() {
-    [1,2,3].forEach(function(i) {
-      var p = document.getElementById('panel-step' + i);
-      if (p) p.classList.add('hidden');
-    });
+  function anteprima(input) {
+    if (!input.files || !input.files[0]) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      fotoBase64 = e.target.result;
+      var img = document.getElementById('foto-img');
+      var prev = document.getElementById('foto-preview');
+      if (img)  img.src = fotoBase64;
+      if (prev) prev.style.display = 'block';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+
+  function rimuoviFoto() {
+    fotoBase64 = '';
+    var inp  = document.getElementById('inp-foto');
+    var prev = document.getElementById('foto-preview');
+    if (inp)  inp.value = '';
+    if (prev) prev.style.display = 'none';
   }
 
   function val(id) {
@@ -531,6 +543,7 @@
     var nome    = val('inp-nome');
     var descr   = val('inp-desc');
     var autoSec = parseInt(val('inp-autosec')) || 0;
+    var medico  = tipoSelezionato !== 'oggetto' ? val('inp-medico') : '';
 
     if (!nome) { showAlert('Inserisci il nome.', 'err'); return; }
 
@@ -557,20 +570,25 @@
 
     try {
       await setDoc(doc(db, 'tags', tagId), {
-        proprietario:       currentUser.uid,
-        tipo:               tipoSelezionato,
-        nome:               nome,
-        identificativo:     descr,
-        autoSec:            autoSec,
-        contatti:           contatti,
-        registrato:         true,
-        dataRegistrazione:  new Date().toISOString()
+        proprietario:         currentUser.uid,
+        tipo:                 tipoSelezionato,
+        nome:                 nome,
+        identificativo:       descr,
+        indicazioniMediche:   medico,
+        foto:                 fotoBase64,
+        autoSec:              autoSec,
+        contatti:             contatti,
+        registrato:           true,
+        dataRegistrazione:    new Date().toISOString()
       });
 
       // Mostra successo
       document.getElementById('steps-bar').style.display    = 'none';
       document.getElementById('alert-main').style.display   = 'none';
-      hideAll();
+      document.getElementById('tipo-badge').style.display   = 'none';
+      document.getElementById('panel-step1').classList.add('hidden');
+      var p2 = document.getElementById('panel-step2');
+      if (p2) p2.classList.add('hidden');
       var sv = document.getElementById('view-success');
       if (sv) sv.style.display = 'flex';
       var urlBox = document.getElementById('success-url');
