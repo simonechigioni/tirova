@@ -409,15 +409,10 @@
     'tutore','proprietario','altro'
   ];
 
-  window.anteprima   = anteprima;
-  window.rimuoviFoto = rimuoviFoto;
-  window.toggleAltro = toggleAltro;
-  window.vaiStep        = vaiStep;
-  window.setNumContatti = setNumContatti;
-  window.salvaTag       = salvaTag;
-  window.doLogout       = doLogout;
-
   var fotoBase64 = '';
+
+  // Le funzioni vengono esposte globalmente dopo la loro dichiarazione
+  // (vedi in fondo al modulo)
 
   function vaiStep(n) {
     if (n === 2) {
@@ -607,6 +602,14 @@
     await signOut(auth);
     window.location.href = 'tirova-auth-v1.0.html';
   }
+
+  // Esponi tutte le funzioni globalmente dopo la dichiarazione
+  window.vaiStep        = vaiStep;
+  window.anteprima      = anteprima;
+  window.rimuoviFoto    = rimuoviFoto;
+  window.setNumContatti = setNumContatti;
+  window.salvaTag       = salvaTag;
+  window.doLogout       = doLogout;
 
   // Init
   renderContattiForm();
