@@ -488,7 +488,9 @@
     if (!el) return;
     el.textContent = msg;
     el.className   = 'alert' + (msg ? ' ' + tipo : '');
-    if (!msg) el.style.display = 'none';
+    if (!msg) { el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function setNumContatti(n) {
