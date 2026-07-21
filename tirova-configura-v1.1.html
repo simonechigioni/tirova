@@ -249,6 +249,13 @@
     </div>
   </div>
 
+  <!-- Tag ID non riconosciuto -->
+  <div id="view-tag-invalid" style="display:none;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:48px 24px;">
+    <div style="font-size:48px;">🏷️</div>
+    <div style="font-size:20px;font-weight:800;color:var(--ink);">Tag non riconosciuto</div>
+    <div style="font-size:14px;color:var(--muted);line-height:1.6;max-width:320px;">Questo codice non corrisponde a nessun tag TiRoVA creato. Contatta chi ti ha fornito il tag, oppure verifica di aver scansionato il codice corretto.</div>
+  </div>
+
   <div class="alert" id="alert-main"></div>
 
   <!-- STEP 1 — Dettagli (ex step 2) -->
@@ -377,18 +384,25 @@
     var emailEl = document.getElementById('header-email');
     if (emailEl) emailEl.textContent = user.email;
 
-    // Leggi tipo tag dal database
+    // Leggi tipo tag dal database — se l'ID non esiste, blocca la configurazione:
+    // solo i tag creati prima in admin possono essere configurati dal cliente.
+    var tagEsistente = false;
     if (tagId) {
       try {
         var snap = await getDoc(doc(db, 'tags', tagId));
         if (snap.exists()) {
-          tipoSelezionato = snap.data().tipo || 'sos';
-        } else {
-          tipoSelezionato = 'sos';
+          tagEsistente     = true;
+          tipoSelezionato  = snap.data().tipo || 'sos';
         }
-      } catch(e) {
-        tipoSelezionato = 'sos';
-      }
+      } catch(e) { /* trattato come non esistente */ }
+    }
+
+    if (!tagId || !tagEsistente) {
+      var invalid = document.getElementById('view-tag-invalid');
+      if (invalid) invalid.style.display = 'flex';
+      document.getElementById('steps-bar').style.display = 'none';
+      document.getElementById('panel-step1').classList.add('hidden');
+      return;
     }
 
     // Mostra badge tipo
@@ -601,7 +615,7 @@
         contatti:             contatti,
         registrato:           true,
         dataRegistrazione:    new Date().toISOString()
-      });
+      }, { merge: true });
 
       // Mostra successo
       document.getElementById('steps-bar').style.display    = 'none';

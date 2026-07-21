@@ -267,6 +267,10 @@
       if (data.proprietario) {
         salvaScansione(id, scanId, data.proprietario);
       }
+      // Verifica UID chip fisico (silenziosa se non possibile: browser non
+      // supportato, permesso negato, o il chip non è più a contatto).
+      // Non blocca mai la pagina SOS in nessun caso.
+      verificaUidNfc(data.nfcUid, id, scanId);
     } catch(e) {
       showError();
     }
@@ -294,6 +298,52 @@
       // Scansione non salvata — non bloccare la pagina SOS
       console.log('Scansione non registrata:', e.message);
     }
+  }
+
+  function normalizzaUid(v) {
+    return (v || '').trim().replace(/[:\s]/g, '').toUpperCase();
+  }
+
+  // Tenta di leggere l'UID fisico del chip NFC e lo confronta con quello
+  // registrato per questo tag. Regole:
+  // - se la lettura non è possibile (browser non supportato, permesso
+  //   negato, chip non più a contatto, timeout) → non segnala nulla
+  // - se non coincide → la pagina SOS resta comunque aperta e utilizzabile,
+  //   ma viene mostrata una segnalazione di incoerenza e salvata nella scansione
+  function verificaUidNfc(nfcUidAtteso, tagId, scanId) {
+    if (!nfcUidAtteso) return; // nessun UID registrato per questo tag: niente da verificare
+    if (!('NDEFReader' in window)) return; // API non supportata: silenzio
+
+    var risolto = false;
+    try {
+      var reader = new NDEFReader();
+      reader.scan().then(function() {
+        reader.onreading = function(event) {
+          if (risolto) return;
+          risolto = true;
+          var letto = normalizzaUid(event.serialNumber);
+          if (letto && letto !== normalizzaUid(nfcUidAtteso)) {
+            segnalaIncoerenzaTag();
+            if (tagId && scanId) {
+              setDoc(doc(db, 'scansioni', tagId, 'lista', scanId), {
+                nfcUidMismatch: true,
+                nfcUidLetto:    letto
+              }, { merge: true }).catch(function() {});
+            }
+          }
+        };
+      }).catch(function() { /* lettura non possibile: nessuna segnalazione */ });
+    } catch(e) { /* lettura non possibile: nessuna segnalazione */ }
+
+    // Se dopo qualche secondo non è arrivata nessuna lettura, si rinuncia
+    // silenziosamente (il chip normalmente non è più a contatto col telefono
+    // dopo l'apertura della pagina).
+    setTimeout(function() { risolto = true; }, 5000);
+  }
+
+  function segnalaIncoerenzaTag() {
+    var el = document.getElementById('uid-incoerenza');
+    if (el) el.style.display = 'flex';
   }
 
   function show(id, visible) {
@@ -340,6 +390,11 @@
         '</div>' +
       '</div>' +
       (data.indicazioniMediche ? '<div style="background:#FFF8E1;border:1.5px solid #FFE082;border-radius:14px;padding:14px 16px;width:100%;max-width:420px;margin-bottom:16px;font-size:13px;color:#5D4037;line-height:1.6;"><strong style="display:block;margin-bottom:4px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;">⚕️ Indicazioni mediche</strong>' + data.indicazioniMediche + '</div>' : '') +
+
+      '<div id="uid-incoerenza" style="display:none;align-items:center;gap:10px;background:#FFF3E0;border:1.5px solid #FFB74D;border-radius:14px;padding:12px 16px;width:100%;max-width:420px;margin-bottom:16px;font-size:12.5px;color:#8A5A00;line-height:1.5;">' +
+        '<span style="font-size:20px;flex-shrink:0;">⚠️</span>' +
+        '<span>Il chip NFC letto non corrisponde a quello registrato per questo tag. La posizione e i contatti sotto restano comunque validi e utilizzabili.</span>' +
+      '</div>' +
 
       '<div class="card">' +
         '<div class="status-row">' +
