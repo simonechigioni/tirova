@@ -338,15 +338,6 @@
           </select>
         </div>
       </div>
-      <div class="field-row">
-        <div class="field">
-          <label>UID chip NFC <span style="color:var(--muted);font-weight:400;">(opzionale — lo trovi/lo leggi dal chip fisico)</span></label>
-          <div style="display:flex;gap:8px;">
-            <input id="new-nfcuid" type="text" placeholder="es. 04A2B3C4D5E680" maxlength="32" style="flex:1;"/>
-            <button type="button" id="btn-leggi-nfc" onclick="leggiUidNfc('new-nfcuid')" style="display:none;padding:0 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;color:var(--ink-soft);">📡 Leggi NFC</button>
-          </div>
-        </div>
-      </div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">
         Il tag verrà creato come <strong>non registrato</strong> — il cliente inserirà tutti i dettagli scansionando il tag NFC.
       </div>
@@ -370,24 +361,6 @@
 
 </div>
 
-<!-- Modal Imposta UID NFC -->
-<div class="modal-overlay" id="modal-uid">
-  <div class="modal">
-    <div class="modal-title">UID chip NFC</div>
-    <div class="modal-desc">Tag <strong id="modal-uid-tagid"></strong> — inserisci o leggi l'UID del chip fisico programmato.</div>
-    <div class="field" style="margin-bottom:16px;">
-      <label>UID chip</label>
-      <div style="display:flex;gap:8px;">
-        <input id="modal-uid-value" type="text" placeholder="es. 04A2B3C4D5E680" maxlength="32" style="flex:1;padding:11px 13px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:15px;font-family:inherit;outline:none;"/>
-        <button type="button" id="btn-leggi-nfc-modal" onclick="leggiUidNfc('modal-uid-value')" style="display:none;padding:0 14px;border-radius:10px;border:1.5px solid #e8e8e8;background:#F7F7F7;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;color:#444;">📡 Leggi</button>
-      </div>
-    </div>
-    <div class="modal-btns">
-      <button class="btn-mc" onclick="chiudiModalUid()">Annulla</button>
-      <button class="btn-md" style="background:#1565C0;" onclick="confermaUid()">✓ Salva</button>
-    </div>
-  </div>
-</div>
 
 <!-- Modal Storico scansioni -->
 <div class="modal-overlay" id="modal-scansioni">
@@ -468,10 +441,6 @@
   window.eliminaTag     = eliminaTag;
   window.chiudiModal    = chiudiModal;
   window.confermaElimina = confermaElimina;
-  window.leggiUidNfc        = leggiUidNfc;
-  window.impostaUid         = impostaUid;
-  window.chiudiModalUid     = chiudiModalUid;
-  window.confermaUid        = confermaUid;
   window.mostraScansioni    = mostraScansioni;
   window.chiudiModalScansioni = chiudiModalScansioni;
 
@@ -611,15 +580,11 @@
         (t.identificativo ? '<div style="font-size:13px;color:var(--ink-soft);margin-bottom:6px;">' + t.identificativo + '</div>' : '') +
         (t.indicazioniMediche ? '<div style="font-size:12px;background:#FFF8E1;border:1px solid #FFE082;border-radius:8px;padding:8px 10px;margin-bottom:8px;color:#5D4037;">⚕️ ' + t.indicazioniMediche + '</div>' : '') +
         '<div class="tag-row-contatti">' + (contStr || '<em style="color:var(--muted)">Nessun contatto</em>') + '</div>' +
-        (t.nfcUid
-          ? '<div style="font-size:11px;color:var(--muted);margin-top:4px;">📡 UID chip: <span style="font-family:monospace;">' + t.nfcUid + '</span></div>'
-          : '<div style="font-size:11px;color:var(--amber);margin-top:4px;">📡 UID chip non impostato</div>') +
         '<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:10px;margin-bottom:4px;">📲 URL da programmare sul tag NFC</div>' +
         '<div class="tag-row-url">' + tagUrl + '</div>' +
         '<div class="tag-row-actions">' +
           '<button class="btn-action btn-test"   onclick="testTag(\''  + t.id + '\')">▶ Testa</button>' +
           '<button class="btn-action btn-copy"   onclick="copiaUrl(\'' + tagUrl + '\')">📋 Copia URL</button>' +
-          '<button class="btn-action" style="background:#E3F2FD;color:#1565C0;" onclick="impostaUid(\'' + t.id + '\',\'' + (t.nfcUid||'') + '\')">🔗 UID</button>' +
           '<button class="btn-action" style="background:#F3E5F5;color:#6A1B9A;" onclick="mostraScansioni(\'' + t.id + '\')">📊 Scansioni</button>' +
           '<button class="btn-action btn-delete" onclick="eliminaTag(\'' + t.id + '\')">🗑 Elimina</button>' +
         '</div>';
@@ -644,7 +609,6 @@
   }
 
   window.generaIdTag       = generaIdTag;
-  window.aggiornaCampiTipo = aggiornaCampiTipo;
 
   // Genera ID univoco non sequenziale: TRV-XXXXXX
   function generaIdTag() {
@@ -662,14 +626,12 @@
     form.classList.toggle('show');
     if (form.classList.contains('show')) {
       generaIdTag();
-      aggiornaCampiTipo();
     }
   }
 
   async function creaNuovoTag() {
-    var id     = document.getElementById('new-tagid').value.trim().replace(/\s/g,'').toUpperCase();
-    var tipo   = document.getElementById('new-tipo').value;
-    var nfcUid = normalizzaUid(document.getElementById('new-nfcuid').value);
+    var id   = document.getElementById('new-tagid').value.trim().replace(/\s/g,'').toUpperCase();
+    var tipo = document.getElementById('new-tipo').value;
 
     if (!id) { showAlertAdmin('Genera o inserisci un ID tag.', 'err'); return; }
 
@@ -678,74 +640,11 @@
         tipo:          tipo,
         contatti:      [],
         registrato:    false,
-        nfcUid:        nfcUid,
         dataCreazione: new Date().toISOString()
       });
       showAlertAdmin('✓ Tag "' + id + '" creato — URL: ' + BASE_URL + id, 'ok');
       toggleNuovoTag();
-      document.getElementById('new-tagid').value  = '';
-      document.getElementById('new-nfcuid').value = '';
-      caricaTutti();
-    } catch(e) {
-      showAlertAdmin('Errore: ' + e.message, 'err');
-    }
-  }
-
-  function normalizzaUid(v) {
-    return (v || '').trim().replace(/[:\s]/g, '').toUpperCase();
-  }
-
-  // ── Lettura UID chip via Web NFC (solo Chrome Android; altrove il pulsante resta nascosto) ──
-  if ('NDEFReader' in window) {
-    var btn1 = document.getElementById('btn-leggi-nfc');
-    var btn2 = document.getElementById('btn-leggi-nfc-modal');
-    if (btn1) btn1.style.display = 'inline-block';
-    if (btn2) btn2.style.display = 'inline-block';
-  }
-
-  async function leggiUidNfc(targetInputId) {
-    if (!('NDEFReader' in window)) return;
-    var input = document.getElementById(targetInputId);
-    try {
-      showAlertAdmin('📡 Avvicina il tag NFC al telefono...', 'ok');
-      var reader = new NDEFReader();
-      await reader.scan();
-      reader.onreading = function(event) {
-        if (event.serialNumber && input) {
-          input.value = normalizzaUid(event.serialNumber);
-          showAlertAdmin('✓ UID letto: ' + input.value, 'ok');
-        }
-      };
-      reader.onreadingerror = function() {
-        showAlertAdmin('Errore durante la lettura del tag NFC.', 'err');
-      };
-    } catch(e) {
-      showAlertAdmin('Lettura NFC non disponibile: ' + e.message, 'err');
-    }
-  }
-
-  // ── Imposta/aggiorna UID su un tag esistente ──
-  var tagUidSelezionato = null;
-
-  function impostaUid(id, uidAttuale) {
-    tagUidSelezionato = id;
-    document.getElementById('modal-uid-tagid').textContent = id;
-    document.getElementById('modal-uid-value').value = uidAttuale || '';
-    document.getElementById('modal-uid').classList.add('show');
-  }
-
-  function chiudiModalUid() {
-    tagUidSelezionato = null;
-    document.getElementById('modal-uid').classList.remove('show');
-  }
-
-  async function confermaUid() {
-    if (!tagUidSelezionato) return;
-    var nfcUid = normalizzaUid(document.getElementById('modal-uid-value').value);
-    try {
-      await setDoc(doc(db, 'tags', tagUidSelezionato), { nfcUid: nfcUid }, { merge: true });
-      chiudiModalUid();
-      showAlertAdmin('✓ UID aggiornato per ' + tagUidSelezionato, 'ok');
+      document.getElementById('new-tagid').value = '';
       caricaTutti();
     } catch(e) {
       showAlertAdmin('Errore: ' + e.message, 'err');
@@ -787,9 +686,6 @@
             ? '<a href="' + s.mapsUrl + '" target="_blank" style="font-size:12px;color:#D32F2F;text-decoration:none;">📍 Vedi posizione su Maps</a>'
             : '<div style="font-size:12px;color:#888;">Posizione GPS non disponibile</div>') +
           '<div style="font-size:11px;color:#888;margin-top:2px;">' + device + '</div>' +
-          (s.nfcUidMismatch
-            ? '<div style="font-size:11px;color:#E65100;font-weight:700;margin-top:4px;">⚠️ Incoerenza UID chip rilevata in questa scansione</div>'
-            : '') +
         '</div>';
       }).join('');
     } catch(e) {
