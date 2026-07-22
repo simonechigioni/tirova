@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TiRoVA — Informativa Privacy</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --red: #D32F2F; --red-dark: #B71C1C; --ink: #1A1A1A; --ink-soft: #444;
+      --muted: #888; --bg: #F7F7F7; --white: #FFFFFF; --border: #E8E8E8;
+    }
+    body {
+      background: var(--bg); color: var(--ink);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.65;
+    }
+    .header {
+      background: var(--white); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; padding: 24px 20px;
+    }
+    .header img { height: 90px; }
+    .main { max-width: 720px; margin: 0 auto; padding: 32px 20px 80px; }
+    .draft-notice {
+      background: #FFF8E1; border: 1.5px solid #FFE082; border-radius: 12px;
+      padding: 16px 18px; margin-bottom: 32px; font-size: 13px; color: #795548;
+    }
+    .draft-notice strong { color: var(--ink); }
+    h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+    .updated { font-size: 13px; color: var(--muted); margin-bottom: 32px; }
+    h2 {
+      font-size: 17px; font-weight: 800; color: var(--red); margin: 32px 0 10px;
+      padding-top: 16px; border-top: 1px solid var(--border);
+    }
+    h2:first-of-type { border-top: none; padding-top: 0; }
+    p, li { font-size: 14.5px; color: var(--ink-soft); margin-bottom: 10px; }
+    ul { padding-left: 20px; margin-bottom: 12px; }
+    strong { color: var(--ink); }
+    .placeholder {
+      background: #FFEBEE; color: var(--red-dark); font-weight: 700;
+      padding: 1px 6px; border-radius: 4px; font-size: 13.5px;
+    }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 13.5px; }
+    th, td { text-align: left; padding: 8px 10px; border: 1px solid var(--border); }
+    th { background: var(--bg); color: var(--ink); font-weight: 700; }
+    td { color: var(--ink-soft); }
+    a { color: var(--red); }
+  </style>
+</head>
+<body>
+
+<div class="header"><img src="logo.png" alt="TiRoVA"/></div>
+
+<div class="main">
+
+  <div class="draft-notice">
+    ⚠️ <strong>Bozza di lavoro.</strong> Questo documento è un punto di partenza tecnico e va fatto verificare/finalizzare da un legale o consulente privacy prima della pubblicazione, in particolare per i campi contrassegnati <span class="placeholder">[DA COMPILARE]</span> e per il trattamento dei dati sanitari e di geolocalizzazione di minori.
+  </div>
+
+  <h1>Informativa sulla Privacy</h1>
+  <div class="updated">Ultimo aggiornamento: <span class="placeholder">[DATA]</span></div>
+
+  <h2>1. Titolare del trattamento</h2>
+  <p>
+    Il Titolare del trattamento dei dati è <span class="placeholder">[NOME/RAGIONE SOCIALE DA DEFINIRE]</span>,
+    contattabile all'indirizzo email <a href="mailto:simone.chigioni@gmail.com">simone.chigioni@gmail.com</a>.
+  </p>
+
+  <h2>2. Quali dati raccogliamo</h2>
+  <p>TiRoVA raccoglie le seguenti categorie di dati:</p>
+  <table>
+    <tr><th>Categoria</th><th>Dati</th><th>Chi li fornisce</th></tr>
+    <tr><td>Account</td><td>Nome, email, password (gestita da Firebase Authentication)</td><td>L'utente registrato</td></tr>
+    <tr><td>Tag / persona protetta</td><td>Nome, foto, descrizione</td><td>L'utente registrato</td></tr>
+    <tr><td><strong>Dati sanitari</strong> (categoria particolare, art. 9 GDPR)</td><td>Indicazioni mediche inserite facoltativamente sul tag</td><td>L'utente registrato</td></tr>
+    <tr><td>Contatti di emergenza</td><td>Nome, ruolo, numero di telefono</td><td>L'utente registrato, per conto di terzi (es. altro genitore)</td></tr>
+    <tr><td><strong>Geolocalizzazione</strong></td><td>Coordinate GPS al momento della scansione del tag</td><td>Rilevata automaticamente dal dispositivo di chi trova il tag</td></tr>
+    <tr><td>Dati tecnici</td><td>Tipo di dispositivo/browser al momento della scansione</td><td>Rilevati automaticamente</td></tr>
+  </table>
+
+  <h2>3. Finalità e base giuridica del trattamento</h2>
+  <ul>
+    <li><strong>Erogazione del servizio</strong> (creazione account, configurazione tag, invio della posizione a chi trova la persona/oggetto smarrito) — base giuridica: <strong>esecuzione del contratto</strong> (art. 6.1.b GDPR)</li>
+    <li><strong>Dati sanitari</strong> inseriti nelle indicazioni mediche — base giuridica: <strong>consenso esplicito</strong> (art. 9.2.a GDPR), richiesto separatamente al momento dell'inserimento</li>
+    <li><strong>Funzionalità Premium</strong> (storico scansioni con posizione) — base giuridica: esecuzione del contratto</li>
+  </ul>
+
+  <h2>4. Dati di terzi (contatti di emergenza)</h2>
+  <p>
+    Quando inserisci un contatto di emergenza (es. l'altro genitore, un familiare), stai fornendo dati personali
+    (nome, numero di telefono) di una persona diversa da te. In qualità di utente che inserisce questi dati,
+    sei tenuto a informare la persona in questione che il suo numero verrà utilizzato da TiRoVA per essere
+    contattata in caso di emergenza legata al tag configurato.
+  </p>
+
+  <h2>5. Dove sono conservati i dati</h2>
+  <p>
+    I dati sono conservati su <strong>Google Firebase / Google Cloud Platform</strong>. Alcuni servizi
+    (in particolare l'autenticazione) possono comportare il trattamento di dati su infrastruttura Google
+    situata anche <strong>al di fuori dell'Unione Europea</strong> (Stati Uniti). Questo trasferimento è
+    coperto dalla certificazione di Google nell'ambito dell'<strong>EU-U.S. Data Privacy Framework</strong>,
+    riconosciuto come garanzia di adeguatezza dalla Commissione Europea. Maggiori informazioni sulle garanzie
+    di Google sono disponibili su
+    <a href="https://cloud.google.com/terms/data-processing-terms" target="_blank">cloud.google.com/terms/data-processing-terms</a>.
+  </p>
+
+  <h2>6. Chi ha accesso ai dati</h2>
+  <p>
+    L'accesso ai dati è limitato al Titolare del trattamento tramite il pannello di amministrazione di TiRoVA.
+    I dati <strong>non vengono ceduti, venduti o condivisi con terzi</strong> per finalità di marketing o
+    profilazione. Il fornitore di infrastruttura (Google Firebase) agisce come responsabile del trattamento
+    ai sensi dell'art. 28 GDPR, in base agli accordi standard di trattamento dati di Google Cloud.
+  </p>
+
+  <h2>7. Periodo di conservazione</h2>
+  <p>
+    I dati del tag e dell'account sono conservati finché l'account resta attivo. Lo storico delle scansioni
+    (funzionalità Premium) è conservato per <span class="placeholder">[DA DEFINIRE — es. 12 mesi]</span>.
+    Puoi richiedere la cancellazione in qualsiasi momento (vedi punto 8).
+  </p>
+
+  <h2>8. I tuoi diritti</h2>
+  <p>Ai sensi degli artt. 15–22 GDPR, in qualsiasi momento puoi richiedere:</p>
+  <ul>
+    <li><strong>Accesso</strong> ai tuoi dati</li>
+    <li><strong>Rettifica</strong> di dati inesatti (anche direttamente dal tuo pannello utente)</li>
+    <li><strong>Cancellazione</strong> del tuo account e dei tag associati</li>
+    <li><strong>Portabilità</strong> dei dati in formato leggibile</li>
+    <li><strong>Revoca del consenso</strong> in qualsiasi momento (es. rimozione delle indicazioni mediche), senza pregiudicare la liceità del trattamento precedente</li>
+  </ul>
+  <p>
+    Per esercitare questi diritti scrivi a
+    <a href="mailto:simone.chigioni@gmail.com">simone.chigioni@gmail.com</a>.
+    Hai inoltre diritto di proporre reclamo al Garante per la Protezione dei Dati Personali
+    (<a href="https://www.garanteprivacy.it" target="_blank">www.garanteprivacy.it</a>).
+  </p>
+
+  <h2>9. Minori</h2>
+  <p>
+    TiRoVA consente ai genitori/tutori di configurare tag per la protezione di minori. L'inserimento dei dati
+    del minore (nome, foto, indicazioni mediche, posizione in caso di smarrimento) avviene sotto la
+    responsabilità e con il consenso del genitore/tutore che crea l'account, nell'interesse alla sicurezza
+    del minore stesso.
+  </p>
+
+  <h2>10. Sicurezza</h2>
+  <p>
+    I dati sono protetti tramite l'infrastruttura di sicurezza di Google Firebase (autenticazione, regole di
+    accesso ai database, connessioni cifrate HTTPS). L'accesso amministrativo è protetto da credenziali
+    riservate al Titolare.
+  </p>
+
+  <h2>11. Modifiche a questa informativa</h2>
+  <p>
+    Questa informativa può essere aggiornata. La data di ultimo aggiornamento è indicata in cima al documento.
+    In caso di modifiche sostanziali, gli utenti registrati verranno informati.
+  </p>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TiRoVA — Termini di Servizio</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --red: #D32F2F; --red-dark: #B71C1C; --ink: #1A1A1A; --ink-soft: #444;
+      --muted: #888; --bg: #F7F7F7; --white: #FFFFFF; --border: #E8E8E8;
+    }
+    body {
+      background: var(--bg); color: var(--ink);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.65;
+    }
+    .header {
+      background: var(--white); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; padding: 24px 20px;
+    }
+    .header img { height: 90px; }
+    .main { max-width: 720px; margin: 0 auto; padding: 32px 20px 80px; }
+    .draft-notice {
+      background: #FFF8E1; border: 1.5px solid #FFE082; border-radius: 12px;
+      padding: 16px 18px; margin-bottom: 32px; font-size: 13px; color: #795548;
+    }
+    .draft-notice strong { color: var(--ink); }
+    h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+    .updated { font-size: 13px; color: var(--muted); margin-bottom: 32px; }
+    h2 {
+      font-size: 17px; font-weight: 800; color: var(--red); margin: 32px 0 10px;
+      padding-top: 16px; border-top: 1px solid var(--border);
+    }
+    h2:first-of-type { border-top: none; padding-top: 0; }
+    p, li { font-size: 14.5px; color: var(--ink-soft); margin-bottom: 10px; }
+    ul { padding-left: 20px; margin-bottom: 12px; }
+    strong { color: var(--ink); }
+    .placeholder {
+      background: #FFEBEE; color: var(--red-dark); font-weight: 700;
+      padding: 1px 6px; border-radius: 4px; font-size: 13.5px;
+    }
+    a { color: var(--red); }
+  </style>
+</head>
+<body>
+
+<div class="header"><img src="logo.png" alt="TiRoVA"/></div>
+
+<div class="main">
+
+  <div class="draft-notice">
+    ⚠️ <strong>Bozza di lavoro</strong> — da far verificare da un legale prima della pubblicazione, in particolare
+    le clausole su responsabilità e limitazione di garanzia relative a un servizio usato in contesti di emergenza.
+  </div>
+
+  <h1>Termini di Servizio</h1>
+  <div class="updated">Ultimo aggiornamento: <span class="placeholder">[DATA]</span></div>
+
+  <h2>1. Il servizio</h2>
+  <p>
+    TiRoVA è un servizio che, tramite tag NFC, consente a chi trova una persona o un oggetto smarrito di
+    contattare rapidamente i referenti indicati dal proprietario del tag e di condividerne la posizione GPS.
+  </p>
+
+  <h2>2. Natura del servizio e limiti</h2>
+  <p>
+    TiRoVA è uno <strong>strumento di ausilio</strong> alla ricerca e al ricongiungimento, e non sostituisce
+    in alcun caso i servizi di emergenza ufficiali (112/113). In situazioni di emergenza reale, contatta sempre
+    per primi i numeri di emergenza.
+  </p>
+  <p>
+    Il funzionamento del servizio dipende da fattori fuori dal nostro controllo: disponibilità di rete dati sul
+    dispositivo di chi trova il tag, precisione del GPS, disponibilità di app come WhatsApp. TiRoVA non può
+    garantire che ogni scansione vada a buon fine o che la posizione rilevata sia sempre disponibile o accurata.
+  </p>
+
+  <h2>3. Account e responsabilità dell'utente</h2>
+  <ul>
+    <li>Sei responsabile dell'accuratezza dei dati inseriti (nome, contatti, indicazioni mediche)</li>
+    <li>Sei responsabile di aver informato le persone i cui contatti inserisci (es. altro genitore) e di avere titolo per farlo</li>
+    <li>Sei responsabile della custodia delle tue credenziali di accesso</li>
+  </ul>
+
+  <h2>4. Piano Premium</h2>
+  <p>
+    Il piano Premium offre funzionalità aggiuntive (storico delle scansioni). L'attivazione avviene
+    <span class="placeholder">[MODALITÀ DI PAGAMENTO/ATTIVAZIONE DA DEFINIRE]</span>.
+  </p>
+
+  <h2>5. Limitazione di responsabilità</h2>
+  <p>
+    Nei limiti consentiti dalla legge, TiRoVA non è responsabile per danni indiretti derivanti dal mancato o
+    ritardato funzionamento del servizio, salvo i casi di dolo o colpa grave.
+    <span class="placeholder">[CLAUSOLA DA FAR VERIFICARE DA UN LEGALE]</span>
+  </p>
+
+  <h2>6. Recesso e cancellazione</h2>
+  <p>
+    Puoi richiedere la cancellazione del tuo account e di tutti i dati associati in qualsiasi momento,
+    scrivendo a <a href="mailto:simone.chigioni@gmail.com">simone.chigioni@gmail.com</a>.
+  </p>
+
+  <h2>7. Legge applicabile</h2>
+  <p>
+    I presenti termini sono regolati dalla legge italiana. Per qualunque controversia è competente il foro
+    di <span class="placeholder">[CITTÀ DA DEFINIRE]</span>, salve le tutele previste per i consumatori.
+  </p>
+
+  <h2>8. Modifiche ai termini</h2>
+  <p>
+    Questi termini possono essere aggiornati. In caso di modifiche sostanziali, gli utenti registrati
+    verranno informati.
+  </p>
+
+  <p style="margin-top:32px;">
+    Per la gestione dei dati personali, consulta la nostra
+    <a href="tirova-privacy-v1.0.html">Informativa Privacy</a>.
+  </p>
+
+</div>
+</body>
+</html>

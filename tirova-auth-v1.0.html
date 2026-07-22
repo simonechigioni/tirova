@@ -245,6 +245,16 @@
       <input id="signup-pass2" type="password" placeholder="Ripeti la password" autocomplete="new-password"/>
     </div>
 
+    <label style="display:flex;align-items:flex-start;gap:10px;margin-top:16px;cursor:pointer;">
+      <input id="signup-consenso" type="checkbox" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:var(--red);"/>
+      <span style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;">
+        Ho letto e accetto
+        <a href="tirova-privacy-v1.0.html" target="_blank" style="color:var(--red);font-weight:600;">l'Informativa Privacy</a>
+        e i
+        <a href="tirova-termini-v1.0.html" target="_blank" style="color:var(--red);font-weight:600;">Termini di Servizio</a>.
+      </span>
+    </label>
+
     <button class="btn-primary" id="btn-signup" onclick="doSignup()">
       <span class="spinner-sm" id="spin-signup"></span>
       <span id="lbl-signup">Crea account</span>
@@ -412,6 +422,10 @@
     if (pass.length < 8) {
       setAlert('alert-signup', 'La password deve essere di almeno 8 caratteri.', 'err'); return;
     }
+    var consenso = document.getElementById('signup-consenso');
+    if (!consenso || !consenso.checked) {
+      setAlert('alert-signup', 'Devi accettare l\'Informativa Privacy e i Termini di Servizio per continuare.', 'err'); return;
+    }
     setLoading('signup', true);
     setAlert('alert-signup', '', '');
     try {
@@ -420,7 +434,9 @@
       await setDoc(doc(db, 'users', cred.user.uid), {
         nome: nome,
         email: email,
-        dataRegistrazione: new Date().toISOString()
+        dataRegistrazione: new Date().toISOString(),
+        consensoPrivacy: true,
+        consensoPrivacyData: new Date().toISOString()
       });
       // onAuthStateChanged gestisce il redirect
     } catch(e) {

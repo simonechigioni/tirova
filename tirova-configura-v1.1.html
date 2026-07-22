@@ -274,7 +274,14 @@
     <!-- Indicazioni mediche (nascoste per oggetto) -->
     <div class="field" id="campo-medico-cfg">
       <label>⚕️ Indicazioni mediche <span style="color:var(--muted);font-weight:400;">(opzionale)</span></label>
-      <textarea id="inp-medico" placeholder="es. Allergia alle arachidi, asma, diabete tipo 1, farmaci in uso..."></textarea>
+      <textarea id="inp-medico" placeholder="es. Allergia alle arachidi, asma, diabete tipo 1, farmaci in uso..." oninput="onMedicoChange()"></textarea>
+      <label id="consenso-medico-wrap" style="display:none;align-items:flex-start;gap:10px;margin-top:10px;cursor:pointer;background:#FFF8E1;border:1.5px solid #FFE082;border-radius:10px;padding:11px 14px;">
+        <input id="consenso-medico" type="checkbox" style="width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:var(--red);"/>
+        <span style="font-size:12px;color:#5D4037;line-height:1.5;">
+          Acconsento al trattamento dei dati relativi alla salute inseriti qui sopra, ai sensi dell'art. 9 GDPR
+          (dato "categoria particolare"). Vedi <a href="tirova-privacy-v1.0.html" target="_blank" style="color:var(--red);font-weight:600;">Informativa Privacy</a>.
+        </span>
+      </label>
     </div>
     <!-- Foto (nascosta per oggetto) -->
     <div class="field" id="campo-foto-cfg">
@@ -497,6 +504,16 @@
     return el ? el.value.trim() : '';
   }
 
+  function onMedicoChange() {
+    var wrap = document.getElementById('consenso-medico-wrap');
+    if (!wrap) return;
+    wrap.style.display = val('inp-medico') ? 'flex' : 'none';
+    if (!val('inp-medico')) {
+      var cb = document.getElementById('consenso-medico');
+      if (cb) cb.checked = false;
+    }
+  }
+
   function showAlert(msg, tipo) {
     var el = document.getElementById('alert-main');
     if (!el) return;
@@ -581,6 +598,14 @@
     var medico  = tipoSelezionato !== 'oggetto' ? val('inp-medico') : '';
 
     if (!nome) { showAlert('Inserisci il nome.', 'err'); return; }
+
+    if (medico) {
+      var consensoMedico = document.getElementById('consenso-medico');
+      if (!consensoMedico || !consensoMedico.checked) {
+        showAlert('Per inserire indicazioni mediche devi confermare il consenso al trattamento dei dati sanitari.', 'err');
+        return;
+      }
+    }
 
     var contatti = [];
     for (var i = 1; i <= numContatti; i++) {
