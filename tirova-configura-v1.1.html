@@ -436,6 +436,17 @@
     if (cm) cm.style.display = isOggetto ? 'none' : 'block';
     if (cf) cf.style.display = isOggetto ? 'none' : 'block';
 
+    // Sincronizza la visibilità della checkbox di consenso sanitario con
+    // il contenuto reale del campo, indipendentemente da come ci è
+    // arrivato: digitazione manuale, ripristino automatico del browser
+    // dopo un reload, o precompilazione futura in caso di modifica di un
+    // tag esistente. Prima veniva aggiornata solo sull'evento 'input',
+    // che alcuni browser (in particolare Chrome Android) non generano
+    // quando ripristinano il valore di una textarea da soli — lasciando
+    // l'utente bloccato con una richiesta di conferma ma senza checkbox
+    // visibile per soddisfarla.
+    onMedicoChange();
+
     renderContattiForm();
   });
 
