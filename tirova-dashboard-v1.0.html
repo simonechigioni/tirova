@@ -263,9 +263,22 @@
   <div class="section-title" style="margin-top:28px;">📊 Storico scansioni</div>
   <div id="scan-list"></div>
 
+  <!-- I miei dati (diritti GDPR) -->
+  <div class="section-title" style="margin-top:28px;">🔐 I miei dati</div>
+  <div class="tag-card" style="flex-direction:column;align-items:stretch;gap:12px;">
+    <div style="font-size:13px;color:var(--muted);line-height:1.5;">
+      Puoi scaricare una copia di tutti i tuoi dati (profilo, tag, contatti, storico scansioni) oppure
+      eliminare definitivamente il tuo account e tutti i dati associati.
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn-action btn-copy" onclick="esportaDati()" id="btn-export">📥 Esporta i miei dati</button>
+      <button class="btn-action btn-delete" onclick="apriModalAccount()">🗑 Elimina account e tutti i dati</button>
+    </div>
+  </div>
+
 </div>
 
-<!-- Modal conferma elimina -->
+<!-- Modal conferma elimina tag -->
 <div class="modal-overlay" id="modal-elimina">
   <div class="modal">
     <div class="modal-title">Eliminare il tag?</div>
@@ -277,9 +290,25 @@
   </div>
 </div>
 
+<!-- Modal conferma eliminazione account -->
+<div class="modal-overlay" id="modal-account">
+  <div class="modal">
+    <div class="modal-title">Eliminare l'account?</div>
+    <div class="modal-desc">
+      Questa azione è <strong>irreversibile</strong>: verranno eliminati definitivamente il tuo account,
+      tutti i tag configurati e l'intero storico scansioni. Se hai persone che dipendono da un tag TiRoVA
+      attivo (es. un bambino), assicurati di aver pensato a un'alternativa prima di procedere.
+    </div>
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" onclick="chiudiModalAccount()">Annulla</button>
+      <button class="btn-modal-delete" onclick="confermaEliminaAccount()">Elimina definitivamente</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut }
+  import { getAuth, onAuthStateChanged, signOut, deleteUser }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, collection, query, where, getDocs, doc, getDoc, deleteDoc }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -311,13 +340,17 @@
     caregiver: 'Persona assistita', oggetto: 'Oggetto', sos: 'SOS'
   };
 
-  window.doLogout        = doLogout;
-  window.testTag         = testTag;
-  window.modificaTag     = modificaTag;
-  window.eliminaTag      = eliminaTag;
-  window.chiudiModal     = chiudiModal;
-  window.confermaElimina = confermaElimina;
-  window.copiaUrl        = copiaUrl;
+  window.doLogout             = doLogout;
+  window.testTag              = testTag;
+  window.modificaTag          = modificaTag;
+  window.eliminaTag           = eliminaTag;
+  window.chiudiModal          = chiudiModal;
+  window.confermaElimina      = confermaElimina;
+  window.copiaUrl             = copiaUrl;
+  window.esportaDati          = esportaDati;
+  window.apriModalAccount     = apriModalAccount;
+  window.chiudiModalAccount   = chiudiModalAccount;
+  window.confermaEliminaAccount = confermaEliminaAccount;
 
   onAuthStateChanged(auth, async function(user) {
     if (!user) { window.location.href = 'tirova-auth-v1.0.html'; return; }
@@ -567,6 +600,94 @@
     el.textContent = msg;
     el.className   = 'alert ' + tipo;
     setTimeout(function() { el.className = 'alert'; }, 4000);
+  }
+
+  // ── Esportazione dati (art. 20 GDPR — portabilità) ──
+  async function esportaDati() {
+    var btn = document.getElementById('btn-export');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Preparazione...'; }
+    try {
+      var out = { esportato_il: new Date().toISOString(), account: currentUser.email };
+
+      var userSnap = await getDoc(doc(db, 'users', currentUser.uid));
+      out.profilo = userSnap.exists() ? userSnap.data() : null;
+
+      var qTag  = query(collection(db, 'tags'), where('proprietario', '==', currentUser.uid));
+      var snTag = await getDocs(qTag);
+      out.tags = [];
+      var tagIds = [];
+      snTag.forEach(function(d) {
+        out.tags.push(Object.assign({ id: d.id }, d.data()));
+        tagIds.push(d.id);
+      });
+
+      out.storico_scansioni = [];
+      for (var i = 0; i < tagIds.length; i++) {
+        var snScan = await getDocs(collection(db, 'scansioni', tagIds[i], 'lista'));
+        snScan.forEach(function(s) {
+          out.storico_scansioni.push(Object.assign({ id: s.id, tagId: tagIds[i] }, s.data()));
+        });
+      }
+
+      var blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+      var url  = URL.createObjectURL(blob);
+      var a    = document.createElement('a');
+      a.href = url;
+      a.download = 'tirova-dati-' + currentUser.uid.slice(0, 8) + '-' + Date.now() + '.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showAlert('Dati esportati correttamente.', 'ok');
+    } catch(e) {
+      showAlert('Errore durante l\'esportazione: ' + e.message, 'err');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '📥 Esporta i miei dati'; }
+    }
+  }
+
+  // ── Cancellazione account (art. 17 GDPR — diritto all'oblio) ──
+  function apriModalAccount() {
+    document.getElementById('modal-account').classList.add('show');
+  }
+  function chiudiModalAccount() {
+    document.getElementById('modal-account').classList.remove('show');
+  }
+
+  async function confermaEliminaAccount() {
+    try {
+      // 1) Elimina tutti i tag di proprietà dell'utente
+      var qTag  = query(collection(db, 'tags'), where('proprietario', '==', currentUser.uid));
+      var snTag = await getDocs(qTag);
+      var tagIds = [];
+      for (var i = 0; i < snTag.docs.length; i++) {
+        tagIds.push(snTag.docs[i].id);
+        await deleteDoc(snTag.docs[i].ref);
+      }
+
+      // 2) Elimina lo storico scansioni di ogni tag
+      for (var j = 0; j < tagIds.length; j++) {
+        var snScan = await getDocs(collection(db, 'scansioni', tagIds[j], 'lista'));
+        for (var k = 0; k < snScan.docs.length; k++) {
+          await deleteDoc(snScan.docs[k].ref);
+        }
+      }
+
+      // 3) Elimina il profilo utente
+      await deleteDoc(doc(db, 'users', currentUser.uid));
+
+      // 4) Elimina l'account di autenticazione
+      await deleteUser(currentUser);
+
+      window.location.href = 'tirova-auth-v1.0.html';
+    } catch(e) {
+      chiudiModalAccount();
+      if (e.code === 'auth/requires-recent-login') {
+        showAlert('Per motivi di sicurezza, esci e rientra nel tuo account prima di eliminarlo definitivamente.', 'err');
+      } else {
+        showAlert('Errore durante l\'eliminazione: ' + e.message, 'err');
+      }
+    }
   }
 
   async function doLogout() {

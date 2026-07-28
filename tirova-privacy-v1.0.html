@@ -58,7 +58,7 @@
   </div>
 
   <h1>Informativa sulla Privacy</h1>
-  <div class="updated">Ultimo aggiornamento: <span class="placeholder">[DATA]</span></div>
+  <div class="updated">Ultimo aggiornamento: 28/07/2026</div>
 
   <h2>1. Titolare del trattamento</h2>
   <p>
@@ -74,7 +74,7 @@
     <tr><td>Tag / persona protetta</td><td>Nome, foto, descrizione</td><td>L'utente registrato</td></tr>
     <tr><td><strong>Dati sanitari</strong> (categoria particolare, art. 9 GDPR)</td><td>Indicazioni mediche inserite facoltativamente sul tag</td><td>L'utente registrato</td></tr>
     <tr><td>Contatti di emergenza</td><td>Nome, ruolo, numero di telefono</td><td>L'utente registrato, per conto di terzi (es. altro genitore)</td></tr>
-    <tr><td><strong>Geolocalizzazione</strong></td><td>Coordinate GPS al momento della scansione del tag</td><td>Rilevata automaticamente dal dispositivo di chi trova il tag</td></tr>
+    <tr><td><strong>Geolocalizzazione</strong></td><td>Coordinate GPS al momento della scansione del tag. Vengono <strong>sempre</strong> mostrate in tempo reale a chi scansiona (per condividerle con i contatti), ma vengono <strong>salvate nello storico</strong> solo se il tag appartiene a un account con piano Premium attivo</td><td>Rilevata automaticamente dal dispositivo di chi trova il tag</td></tr>
     <tr><td>Dati tecnici</td><td>Tipo di dispositivo/browser al momento della scansione</td><td>Rilevati automaticamente</td></tr>
   </table>
 
@@ -82,8 +82,13 @@
   <ul>
     <li><strong>Erogazione del servizio</strong> (creazione account, configurazione tag, invio della posizione a chi trova la persona/oggetto smarrito) — base giuridica: <strong>esecuzione del contratto</strong> (art. 6.1.b GDPR)</li>
     <li><strong>Dati sanitari</strong> inseriti nelle indicazioni mediche — base giuridica: <strong>consenso esplicito</strong> (art. 9.2.a GDPR), richiesto separatamente al momento dell'inserimento</li>
-    <li><strong>Funzionalità Premium</strong> (storico scansioni con posizione) — base giuridica: esecuzione del contratto</li>
+    <li><strong>Funzionalità Premium</strong> (storico scansioni con posizione, conservato per un periodo limitato — vedi punto 7) — base giuridica: esecuzione del contratto</li>
   </ul>
+  <p>
+    Al momento della registrazione, l'utente dichiara di essere maggiorenne e di essere il proprietario del
+    tag configurato oppure il genitore/tutore legale della persona (o responsabile dell'animale/oggetto) per
+    cui il tag viene configurato.
+  </p>
 
   <h2>4. Dati di terzi (contatti di emergenza)</h2>
   <p>
@@ -115,8 +120,12 @@
   <h2>7. Periodo di conservazione</h2>
   <p>
     I dati del tag e dell'account sono conservati finché l'account resta attivo. Lo storico delle scansioni
-    (funzionalità Premium) è conservato per <span class="placeholder">[DA DEFINIRE — es. 12 mesi]</span>.
-    Puoi richiedere la cancellazione in qualsiasi momento (vedi punto 8).
+    (funzionalità Premium), incluse le coordinate GPS, è conservato per <strong>30 giorni</strong> dal momento
+    della scansione, dopodiché viene <strong>cancellato automaticamente</strong> tramite una procedura
+    schedulata. Per i tag senza piano Premium, nessuno storico di scansione viene salvato: la posizione GPS
+    viene condivisa solo in tempo reale con i contatti indicati e non viene mai scritta su database.
+    Puoi comunque richiedere la cancellazione anticipata del tuo account e di tutti i dati associati in
+    qualsiasi momento (vedi punto 8).
   </p>
 
   <h2>8. I tuoi diritti</h2>
@@ -129,8 +138,10 @@
     <li><strong>Revoca del consenso</strong> in qualsiasi momento (es. rimozione delle indicazioni mediche), senza pregiudicare la liceità del trattamento precedente</li>
   </ul>
   <p>
-    Per esercitare questi diritti scrivi a
-    <a href="mailto:simone.chigioni@gmail.com">simone.chigioni@gmail.com</a>.
+    Puoi esercitare i diritti di <strong>accesso, esportazione e cancellazione completa</strong> in autonomia
+    e in qualsiasi momento dalla sezione <strong>"I miei dati"</strong> della tua Dashboard. Per la rettifica
+    dei dati del tag puoi modificarli direttamente dal pannello di gestione del tag. Per qualsiasi altra
+    richiesta scrivi a <a href="mailto:simone.chigioni@gmail.com">simone.chigioni@gmail.com</a>.
     Hai inoltre diritto di proporre reclamo al Garante per la Protezione dei Dati Personali
     (<a href="https://www.garanteprivacy.it" target="_blank">www.garanteprivacy.it</a>).
   </p>

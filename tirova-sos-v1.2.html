@@ -262,11 +262,16 @@
       // "metadata" (Premium) e il salvataggio GPS, cosi' confluiscono
       // nello stesso documento Firestore invece che in due separati.
       var scanId = 'scan_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-      renderSOS(data, id, scanId);
-      // Salva scansione (solo se proprietario Premium)
-      if (data.proprietario) {
-        salvaScansione(id, scanId, data.proprietario);
-      }
+
+      // Controllo Premium eseguito UNA sola volta e condiviso da tutti i
+      // punti che potrebbero scrivere su Firestore (metadata + GPS), cosi'
+      // da garantire che NESSUN dato di scansione (incluse le coordinate
+      // GPS) venga mai salvato per i tag non Premium. In precedenza il
+      // salvataggio GPS non verificava affatto lo stato Premium: bug corretto.
+      var premiumPromise = data.proprietario ? checkPremium(data.proprietario) : Promise.resolve(false);
+
+      renderSOS(data, id, scanId, premiumPromise);
+      salvaScansione(id, scanId, premiumPromise);
       // Verifica UID chip fisico (silenziosa se non possibile: browser non
       // supportato, permesso negato, o il chip non è più a contatto).
       // Non blocca mai la pagina SOS in nessun caso.
@@ -276,24 +281,33 @@
     }
   }
 
-  async function salvaScansione(tagId, scanId, proprietarioUid) {
+  async function checkPremium(proprietarioUid) {
     try {
-      // Controlla se proprietario è Premium e non scaduto
       const userSnap = await getDoc(doc(db, 'users', proprietarioUid));
-      if (!userSnap.exists()) return;
+      if (!userSnap.exists()) return false;
       var userData = userSnap.data();
       var isPremium = userData.premium === true;
       var scadenza  = userData.premiumScadenza;
-      if (!isPremium) return;
-      if (scadenza && new Date(scadenza) < new Date()) return;
+      if (!isPremium) return false;
+      if (scadenza && new Date(scadenza) < new Date()) return false;
+      return true;
+    } catch(e) {
+      return false;
+    }
+  }
 
-      // Salva scansione (merge: true per non sovrascrivere eventuali
-      // coordinate GPS già scritte in parallelo)
-      await setDoc(doc(db, 'scansioni', tagId, 'lista', scanId), {
+  async function salvaScansione(tagId, scanId, premiumPromise, extra) {
+    try {
+      var isPremium = await premiumPromise;
+      if (!isPremium) return; // Nessuno storico per i tag non Premium: niente viene scritto
+      var payload = {
         timestamp:  new Date().toISOString(),
         userAgent:  navigator.userAgent,
         tagId:      tagId
-      }, { merge: true });
+      };
+      if (extra) { for (var k in extra) payload[k] = extra[k]; }
+      // merge: true per non sovrascrivere metadata/GPS già scritti in parallelo
+      await setDoc(doc(db, 'scansioni', tagId, 'lista', scanId), payload, { merge: true });
     } catch(e) {
       // Scansione non salvata — non bloccare la pagina SOS
       console.log('Scansione non registrata:', e.message);
@@ -371,7 +385,7 @@
   var callColors = ['#D32F2F','#B71C1C','#7B1515'];
   var waColors   = ['#25D366','#1DA851','#157A3C'];
 
-  function renderSOS(data, tagId, scanId) {
+  function renderSOS(data, tagId, scanId, premiumPromise) {
     var tipo     = data.tipo || 'sos';
     var cfg      = tipoConfig[tipo] || tipoConfig.sos;
     var bambino  = data.nome || 'il soggetto';
@@ -447,8 +461,8 @@
       '</a>' +
 
       '<p class="privacy-note">' +
-        'La posizione GPS viene condivisa solo con i contatti indicati.<br>' +
-        '<strong>TiRoVA</strong> non salva né conserva alcun dato di posizione.' +
+        'La posizione GPS viene condivisa in tempo reale solo con i contatti indicati.<br>' +
+        'Se il proprietario ha il piano <strong>Premium</strong>, la posizione viene inoltre conservata nello storico scansioni per <strong>30 giorni</strong>, poi cancellata automaticamente. Altrimenti <strong>TiRoVA</strong> non la salva.' +
       '</p>' +
 
       '<div class="footer"><img src="logo.png" alt="TiRoVA"/></div>';
@@ -538,22 +552,11 @@
       enableButtons(body);
       if (autoContatto) startCountdown('whatsapp://send?phone=' + autoContatto.wa + '&text=' + body);
 
-      // Salva subito le coordinate GPS su Firestore, in parallelo e
-      // indipendentemente dal countdown/apertura WhatsApp. Usa lo stesso
-      // scanId del salvataggio "metadata" cosi' confluiscono nello stesso
-      // documento (merge:true in entrambi i casi, l'ordine non conta).
-      if (data.proprietario) {
-        setDoc(doc(db, 'scansioni', tagId, 'lista', scanId), {
-          timestamp: new Date().toISOString(),
-          lat:       lat,
-          lon:       lon,
-          mapsUrl:   mapsUrl,
-          userAgent: navigator.userAgent,
-          tagId:     tagId
-        }, { merge: true }).catch(function(e) {
-          console.log('Salvataggio GPS non riuscito:', e.message);
-        });
-      }
+      // Salva le coordinate GPS su Firestore SOLO se il proprietario è
+      // Premium (stesso controllo, stessa promise, di tutta la scansione).
+      // Usa lo stesso scanId del salvataggio "metadata" cosi' confluiscono
+      // nello stesso documento (merge:true, l'ordine non conta).
+      salvaScansione(tagId, scanId, premiumPromise, { lat: lat, lon: lon, mapsUrl: mapsUrl });
     }
 
     if (!navigator.geolocation) {
