@@ -454,6 +454,19 @@
     if (n === 2) {
       var nome = val('inp-nome');
       if (!nome) { showAlert('Inserisci il nome.', 'err'); return; }
+
+      // Il consenso al trattamento dei dati sanitari va controllato QUI,
+      // finche' siamo ancora nello step 1: la checkbox per confermarlo si
+      // trova solo in questo pannello, quindi bloccare il salvataggio allo
+      // step 2 (come accadeva prima) lascerebbe l'utente senza modo di
+      // risolvere il problema dalla schermata in cui si trova.
+      if (val('inp-medico')) {
+        var consensoMedico = document.getElementById('consenso-medico');
+        if (!consensoMedico || !consensoMedico.checked) {
+          showAlert('Per inserire indicazioni mediche devi confermare il consenso al trattamento dei dati sanitari qui sopra.', 'err');
+          return;
+        }
+      }
     }
 
     stepCorrente = n;
@@ -602,7 +615,8 @@
     if (medico) {
       var consensoMedico = document.getElementById('consenso-medico');
       if (!consensoMedico || !consensoMedico.checked) {
-        showAlert('Per inserire indicazioni mediche devi confermare il consenso al trattamento dei dati sanitari.', 'err');
+        vaiStep(1);
+        showAlert('Per inserire indicazioni mediche devi confermare il consenso al trattamento dei dati sanitari qui sopra.', 'err');
         return;
       }
     }
