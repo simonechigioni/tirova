@@ -246,15 +246,6 @@
     </div>
 
     <label style="display:flex;align-items:flex-start;gap:10px;margin-top:16px;cursor:pointer;">
-      <input id="signup-titolarita" type="checkbox" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:var(--red);"/>
-      <span style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;">
-        Dichiaro di essere maggiorenne e di essere il <strong>proprietario del tag</strong> che configurerò,
-        oppure il <strong>genitore/tutore legale</strong> della persona (o responsabile dell'animale/oggetto)
-        per cui lo configurerò.
-      </span>
-    </label>
-
-    <label style="display:flex;align-items:flex-start;gap:10px;margin-top:12px;cursor:pointer;">
       <input id="signup-consenso" type="checkbox" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:var(--red);"/>
       <span style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;">
         Ho letto e accetto
@@ -333,9 +324,27 @@
     if (badgeId) badgeId.textContent = tagId;
   }
 
-  // Se già loggato → vai direttamente a configura o dashboard
-  onAuthStateChanged(auth, function(user) {
-    if (user) {
+  // Se già loggato → vai direttamente a configura o dashboard.
+  // NB: durante la registrazione (doSignup) questo redirect va rimandato,
+  // altrimenti scatta appena l'account viene creato e interrompe a metà
+  // il salvataggio del profilo su Firestore (setDoc in doSignup).
+  var registrazioneInCorso = false;
+  onAuthStateChanged(auth, async function(user) {
+    if (user && !registrazioneInCorso) {
+      // Ripristino: se per qualche motivo il profilo utente su Firestore
+      // manca (es. account creati prima di questo fix), lo ricrea al login,
+      // senza toccare eventuali dati già presenti.
+      try {
+        var uSnap = await getDoc(doc(db, 'users', user.uid));
+        if (!uSnap.exists()) {
+          await setDoc(doc(db, 'users', user.uid), {
+            nome:              user.displayName || '',
+            email:             user.email || '',
+            dataRegistrazione: new Date().toISOString()
+          });
+        }
+      } catch(e) { /* non bloccare il redirect per un errore di ripristino */ }
+
       if (tagId) {
         window.location.href = 'tirova-configura-v1.1.html#' + tagId;
       } else {
@@ -431,16 +440,13 @@
     if (pass.length < 8) {
       setAlert('alert-signup', 'La password deve essere di almeno 8 caratteri.', 'err'); return;
     }
-    var titolarita = document.getElementById('signup-titolarita');
-    if (!titolarita || !titolarita.checked) {
-      setAlert('alert-signup', 'Devi confermare di essere il proprietario del tag o il genitore/tutore legale per continuare.', 'err'); return;
-    }
     var consenso = document.getElementById('signup-consenso');
     if (!consenso || !consenso.checked) {
       setAlert('alert-signup', 'Devi accettare l\'Informativa Privacy e i Termini di Servizio per continuare.', 'err'); return;
     }
     setLoading('signup', true);
     setAlert('alert-signup', '', '');
+    registrazioneInCorso = true; // blocca il redirect automatico finché il profilo non è salvato
     try {
       var cred = await createUserWithEmailAndPassword(auth, email, pass);
       // Salva profilo utente su Firestore
@@ -449,12 +455,17 @@
         email: email,
         dataRegistrazione: new Date().toISOString(),
         consensoPrivacy: true,
-        consensoPrivacyData: new Date().toISOString(),
-        dichiarazioneTitolarita: true,
-        dichiarazioneTitolaritaData: new Date().toISOString()
+        consensoPrivacyData: new Date().toISOString()
       });
-      // onAuthStateChanged gestisce il redirect
+      // Profilo salvato: ora possiamo reindirizzare in sicurezza
+      registrazioneInCorso = false;
+      if (tagId) {
+        window.location.href = 'tirova-configura-v1.1.html#' + tagId;
+      } else {
+        window.location.href = 'tirova-dashboard-v1.0.html';
+      }
     } catch(e) {
+      registrazioneInCorso = false;
       setAlert('alert-signup', errMsg(e.code), 'err');
       setLoading('signup', false);
     }
